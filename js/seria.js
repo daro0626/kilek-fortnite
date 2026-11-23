@@ -291,11 +291,21 @@ export function poprawny(s) {
   return !swobodny(s) || (se.rundy.length === 1 && ['odkrycie', 'karta', 'mecz'].includes(s.etap));
 }
 
+function poprawOpisLegacy(r) {
+  if (r?.karta !== 'E06' || r.wersjaZasad !== 0 || !r.opis) return r;
+  return { ...r, opis: { ...r.opis, ...LEGACY_OPISY.E06 } };
+}
+
 export function migruj(stary) {
   if (!stary || typeof stary !== 'object') return null;
   if (stary.v === WERSJA) {
-    if (Array.isArray(stary.historia)) return { ...stary, historia: stary.historia.filter(poprawneArchiwum) };
-    return stary;
+    if (!Array.isArray(stary.historia)) return stary;
+    const historia = stary.historia.filter(poprawneArchiwum)
+      .map(wpis => ({ ...wpis, rundy: wpis.rundy.map(poprawOpisLegacy) }));
+    const seria = Array.isArray(stary.seria?.rundy)
+      ? { ...stary.seria, rundy: stary.seria.rundy.map(poprawOpisLegacy) }
+      : stary.seria;
+    return { ...stary, historia, seria };
   }
   if (stary.v === 1 || stary.v === 2) {
     const n = { ...nowyStan(), ...stary, v: WERSJA, historia: [], sposob: stary.sposob ?? 'seria' };

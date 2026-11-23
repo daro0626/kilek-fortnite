@@ -186,6 +186,19 @@ test('migracja v1 i v2 zamraża starsze warunki i rzeczywistą punktację legacy
   }
 });
 
+test('stara karta bez strzelby zachowuje warunek TOP 10 w aktywnej grze i archiwum', () => {
+  const stary = { v: 2, etap: 'karta', tryb: 'build', trudnosc: 'ekstremalny',
+    seria: { pokazane: ['E06'], rundy: [{ karta: 'E06', wyniki: [null, null], odkryta: true }] } };
+  const stan = S.migruj(stary);
+  assert.match(S.runda(stan).opis.cel, /TOP 10/);
+  assert.equal(S.runda(stan).punkty, 1);
+  const finisz = S.zakonczWczesniej(rozegrajRunde(stan, 1, 0));
+  finisz.historia[0].rundy[0].opis.cel = 'Zdobądź Victory Royale bez strzału ze strzelby.';
+  const naprawiony = S.migruj(finisz);
+  assert.match(naprawiony.historia[0].rundy[0].opis.cel, /TOP 10/);
+  assert.deepEqual(naprawiony.historia[0].punkty, [1, 0]);
+});
+
 test('legendarna: wybór ręczny, 25:25 i idempotentna korekta historii', () => {
   let s = S.rozpocznij(S.nowyStan(), 'seria', true);
   assert.equal(S.runda(s).karta, LEGENDARNA.id);
