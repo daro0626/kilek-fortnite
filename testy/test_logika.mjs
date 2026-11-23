@@ -1,7 +1,7 @@
 // Testy logiki KILEK CHALLENGE. Uruchom: node testy/test_logika.mjs
 // Nie potrzebują przeglądarki ani sieci. Niczego nie zapisują do repozytorium.
 import assert from 'node:assert/strict';
-import { MISJE, TRYBY, TRUDNOSCI, pula, dostepna, MIN_KART, SLOWNIK } from '../js/misje.js';
+import { MISJE, TRYBY, TRUDNOSCI, pula, dostepna, MIN_KART, SLOWNIK, PUNKTACJA, LEGENDARNA, SKLADY } from '../js/misje.js';
 import * as S from '../js/seria.js';
 
 let ok = 0;
@@ -47,7 +47,10 @@ test('każda karta ma pełne i poprawne dane', () => {
     m.doprecyzowanie.forEach(d => assert.ok(SLOWNIK[d], m.id + ' ' + d));
     assert.equal(m.id[0], { latwy: 'L', normalny: 'N', trudny: 'T', ekspert: 'X', ekstremalny: 'E' }[m.trudnosc]);
   }
-  assert.ok(MISJE.length >= 28, 'zachowana dotychczasowa pula i cztery nowe misje');
+  assert.ok(MISJE.length >= 100);
+  assert.equal(new Set(MISJE.map(m => [m.cel, m.zaliczenie].join('|'))).size, MISJE.length);
+  assert.equal(new Set(MISJE.map(m => m.tytul)).size, MISJE.length);
+  assert.ok(!ids.has(LEGENDARNA.id));
 });
 
 test('rodzina bez strzelby ma cztery progi w Build i Zero Build', () => {
@@ -60,10 +63,10 @@ test('rodzina bez strzelby ma cztery progi w Build i Zero Build', () => {
 });
 
 test('każda konfiguracja ma co najmniej 4 zgodne karty', () => {
-  for (const t of Object.keys(TRYBY)) for (const d of TRUDNOSCI) {
-    assert.ok(pula(t, d.id).length >= MIN_KART, `${t}/${d.id}: ${pula(t, d.id).length}`);
-    assert.ok(dostepna(t, d.id));
-    assert.ok(pula(t, d.id).every(m => m.tryby.includes(t) && m.trudnosc === d.id));
+  for (const t of Object.keys(TRYBY)) for (const d of TRUDNOSCI) for (const sklad of Object.keys(SKLADY)) {
+    assert.ok(pula(t, d.id, sklad).length >= MIN_KART, `${t}/${d.id}: ${pula(t, d.id).length}`);
+    assert.ok(dostepna(t, d.id, sklad));
+    assert.ok(pula(t, d.id, sklad).every(m => m.tryby.includes(t) && m.trudnosc === d.id && m.sklady.includes(sklad)));
   }
   assert.ok(!pula('build', 'zero').length);
 });
@@ -77,12 +80,12 @@ test('pełna seria: 3 rundy, karty bez powtórek, wynik i zwycięzca', () => {
     const karty = s.seria.rundy.map(r => r.karta);
     assert.equal(new Set(karty).size, 3);
     karty.forEach(id => assert.ok(pula(t, d.id).some(m => m.id === id)));
-    assert.deepEqual(S.punkty(s), [2, 2]);
+    assert.deepEqual(S.punkty(s), [2 * PUNKTACJA[d.id], 2 * PUNKTACJA[d.id]]);
     assert.equal(S.zwyciezca(s), null, 'remis');
   }
 });
 
-test('wymiana: jedna na serię, karta wypada z puli, dostępna przed rundą', () => {
+test('wymiana: jedna na rundę, karta wraca dopiero po wykorzystaniu puli', () => {
   let s = start('zero', 'trudny');
   const pierwsza = S.runda(s).karta;
   s = S.odkryj(s);
@@ -97,8 +100,10 @@ test('wymiana: jedna na serię, karta wypada z puli, dostępna przed rundą', ()
   // wymiana niedostępna w trakcie meczu
   let s2 = start('build', 'latwy'); s2 = S.graj(S.odkryj(s2));
   assert.equal(S.mozeWymienic(s2), false);
-  // wymieniona karta nie wraca w tej serii
-  for (let i = 0; i < 3; i++) s = rozegrajRunde(s);
+  s = rozegrajRunde(s);
+  assert.equal(s.seria.wymiana, false);
+  assert.ok(S.mozeWymienic(S.odkryj(s)));
+  for (let i = 0; i < 2; i++) s = rozegrajRunde(s);
   assert.ok(!s.seria.rundy.some(r => r.karta === pierwsza));
 });
 
@@ -112,21 +117,19 @@ test('unieważnienie: bez punktu, bez zużycia wymiany, nowa karta', () => {
   assert.equal(S.numerRundy(s), 1);
   for (let i = 0; i < 3; i++) s = rozegrajRunde(s, 1, 1);
   assert.equal(s.etap, 'final');
-  assert.deepEqual(S.punkty(s), [3, 3]);
+  assert.deepEqual(S.punkty(s), [21, 21]);
   assert.equal(S.rozegrane(s).length, 3);
 });
 
-test('brak kolejnej karty: można zakończyć serię bez utraty wyników', () => {
-  const ile = pula('zero', 'latwy').length;
+test('nieukończona runda nie trafia do historii po zakończeniu serii', () => {
   let s = rozegrajRunde(start('zero', 'latwy'), 1, 0);
-  for (let i = 1; i < ile; i++) s = S.uniewaznij(S.odkryj(s));
-  assert.equal(s.etap, 'brak');
-  assert.equal(S.mozeWymienic(s), false);
+  s = S.ustawWynik(S.doRozliczenia(S.odkryj(s)), 0, 1);
+  assert.deepEqual(S.punkty(s), [1, 0]);
   s = S.zakonczWczesniej(s);
   assert.equal(s.etap, 'final');
   assert.equal(s.seria.koniec, 'wczesniej');
   assert.deepEqual(S.punkty(s), [1, 0]);
-  assert.equal(S.zwyciezca(s), 0);
+  assert.equal(s.historia[0].rundy.length, 1);
 });
 
 test('zmiana trudności między rundami zachowuje poprzednią kartę i punktację', () => {
@@ -163,16 +166,74 @@ test('losowanie swobodne krąży po całej puli bez bezpośrednich powtórek', (
   assert.equal(S.kolejnaSwobodna(s).etap, 'odkrycie');
 });
 
-test('zapis v1 zachowuje pseudonimy, rozegrane rundy i bieżącą kartę', () => {
-  const s = rozegrajRunde(start(), 1, 0);
-  const v1 = { ...s, v: 1 };
-  delete v1.sposob;
-  localStorage.setItem(Z.KLUCZ, JSON.stringify(v1));
-  const wynik = Z.wczytaj();
-  assert.equal(wynik.uwaga, 'starszy');
-  assert.deepEqual(wynik.stan, s);
-  assert.deepEqual(S.punkty(wynik.stan), [1, 0]);
-  assert.equal(JSON.parse(localStorage.getItem(Z.KLUCZ)).v, 1);
+test('migracja v1 i v2 zamraża starsze warunki i rzeczywistą punktację legacy', () => {
+  for (const v of [1, 2]) {
+    const stary = { v, etap: 'karta', gracze: ['Alfa', 'Beta'], tryb: 'build', trudnosc: 'ekstremalny', ostatnia: 'E01',
+      seria: { pokazane: ['E01', 'E02'], rundy: [{ karta: 'E01', wyniki: [1, 1], odkryta: true }, { karta: 'E02', wyniki: [null, null], odkryta: true }] }};
+    if (v === 2) stary.sposob = 'seria';
+    localStorage.setItem(Z.KLUCZ, JSON.stringify(stary));
+    const wynik = Z.wczytaj();
+    assert.equal(wynik.uwaga, 'starszy');
+    assert.deepEqual(wynik.stan.gracze, ['Alfa', 'Beta']);
+    assert.equal(S.runda(wynik.stan).karta, 'E02');
+    assert.equal(S.runda(wynik.stan).wersjaZasad, 0);
+    assert.match(S.misjaRundy(S.runda(wynik.stan)).zaliczenie, /1–5/);
+    assert.deepEqual(S.punkty(wynik.stan), [1, 1]);
+    assert.equal(JSON.parse(localStorage.getItem(Z.KLUCZ)).v, v);
+    const nowy = rozegrajRunde(wynik.stan, 1, 0);
+    assert.deepEqual(S.punkty(nowy), [2, 1]);
+    assert.equal(S.wartoscRundy(S.runda(nowy)), 10);
+  }
+});
+
+test('legendarna: wybór ręczny, 25:25 i idempotentna korekta historii', () => {
+  let s = S.rozpocznij(S.nowyStan(), 'seria', true);
+  assert.equal(S.runda(s).karta, LEGENDARNA.id);
+  assert.equal(S.wartoscRundy(S.runda(s)), 25);
+  assert.equal(S.wybierzSpecjalna(s), s);
+  assert.equal(S.mozeWymienic(S.odkryj(s)), false);
+  s = rozegrajRunde(s, 1, 1);
+  assert.deepEqual(S.punkty(s), [25, 25]);
+  assert.equal(S.zatwierdz(s), s);
+  const id = s.historia[0].id;
+  s = S.ustawWynik(s, 1, 0, 0);
+  assert.deepEqual(s.historia[0].punkty, [25, 0]);
+  assert.equal(s.historia.length, 1);
+  assert.equal(s.historia[0].id, id);
+  const re = S.rewanz(s);
+  assert.equal(S.runda(re).karta, LEGENDARNA.id);
+  assert.deepEqual(S.punkty(re), [0, 0]);
+  assert.equal(re.historia.length, 1);
+});
+
+test('duet: wspólny wynik daje 25 raz, a drużynowa pula nie trafia do Solo', () => {
+  let s = S.rozpocznij(S.nowyStan(), 'duet', true);
+  assert.equal(s.sklad, 'duo');
+  assert.equal(S.liczbaWynikow(s), 1);
+  s = S.doRozliczenia(S.graj(S.odkryj(s)));
+  assert.equal(S.ustawWynik(s, 1, 1), s);
+  s = S.zatwierdz(S.ustawWynik(s, 0, 1));
+  assert.deepEqual(S.punkty(s), [25]);
+  assert.deepEqual(s.historia[0].punkty, [25]);
+  const druzynowe = MISJE.filter(m => !m.sklady.includes('solo'));
+  assert.ok(druzynowe.length >= 10);
+  assert.ok(druzynowe.every(m => !pula('build', m.trudnosc, 'solo').includes(m)));
+});
+
+test('limity 5, 10 i otwarta seria oraz dowolne wymiany', () => {
+  for (const limit of [5, 10, 0]) {
+    let s = S.rozpocznij(S.ustawOpcje(S.ustawOpcje(S.nowyStan(), 'limit', limit), 'wymianyDowolne', true));
+    for (let i = 0; i < 3; i++) {
+      assert.ok(S.mozeWymienic(s));
+      s = S.wymien(s);
+    }
+    for (let i = 0; i < (limit || 20); i++) {
+      assert.equal(s.etap, 'odkrycie');
+      s = rozegrajRunde(s);
+    }
+    assert.equal(s.etap, limit ? 'final' : 'odkrycie');
+    assert.deepEqual(S.punkty(s), [limit || 20, 0]);
+  }
 });
 
 test('pusta pula: konfiguracja bez kart nie startuje', () => {
