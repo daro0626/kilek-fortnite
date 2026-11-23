@@ -87,6 +87,12 @@ def pelna_seria(browser, w, h, dotyk):
     expect(page.locator('[data-akcja=rozpocznij]')).to_be_visible()
     expect(page.locator('footer')).to_contain_text('not endorsed by Epic')
     bez_przewijania_w_bok(page, f'start {w}')
+    assert page.evaluate("""() => {
+        const pozycja = sel => document.querySelector(sel).getBoundingClientRect();
+        const przycisk = pozycja('.btn-start');
+        return pozycja('.zasada-proby').bottom <= przycisk.top &&
+            przycisk.bottom <= pozycja('#notaZapisu').top;
+    }"""), 'przycisk startu nachodzi na tekst'
     page.fill('#g0', 'Gracz Alfa')
     page.fill('#g1', 'Gracz Beta')
     # Build/Trudny ma 5 kart: wymiana + unieważnienie + 3 rundy

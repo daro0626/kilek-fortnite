@@ -236,13 +236,8 @@ body[data-trud=ekstremalny] .trud-opis .kod{text-shadow:2px 0 rgba(54,208,255,.7
 body[data-trud=ekstremalny] .trudnosci{border-color:rgba(255,51,85,.6);
   background:repeating-linear-gradient(-45deg,rgba(255,51,85,.10) 0 10px,rgba(10,10,20,.75) 10px 20px)}
 .zasada-proby{margin:-4px 0 0;font-size:15px;color:var(--tekst-2)}
-.btn-start{position:fixed;z-index:5;bottom:calc(12px + env(safe-area-inset-bottom));width:auto;
-  left:max(16px,calc(50% - var(--szer) / 2 + 16px));right:max(16px,calc(50% - var(--szer) / 2 + 16px))}
-.widok-start{padding-bottom:84px}
 .konfiguracja:empty{min-height:560px}
 .nota-zapisu{margin:0;font-size:14px;color:var(--tekst-2)}
-body[data-etap=start]::after{content:"";position:fixed;left:0;right:0;bottom:0;height:120px;z-index:4;pointer-events:none;
-  background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--noc) 92%,transparent) 70%)}
 
 /* ---------------------------------------------------------
    STÓŁ: rama, talia, karta
