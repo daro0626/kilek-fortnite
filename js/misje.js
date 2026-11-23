@@ -1,3 +1,5 @@
+import { DODATKOWE_MISJE } from './misje-dodatkowe.js';
+
 // =========================================================
 // KILEK CHALLENGE: pula misji (v0.1, stan na 2026-11-23).
 // Każda misja opiera się wyłącznie na mechanikach opisanych w ZRODLA.md.
@@ -8,6 +10,10 @@ export const TRYBY = {
   build: { id: 'build', nazwa: 'Build', opis: 'Z budowaniem.' },
   zero: { id: 'zero', nazwa: 'Zero Build', opis: 'Bez budowania.' },
 };
+
+export const PUNKTACJA = Object.freeze({ latwy: 1, normalny: 3, trudny: 5, ekspert: 7, ekstremalny: 10, specjalna: 25 });
+export const WERSJA_ZASAD = 1;
+export const SKLADY = { solo: 'Solo', duo: 'Duo' };
 
 export const TRUDNOSCI = [
   { id: 'latwy', nazwa: 'Łatwy', kod: 'ZWIAD', stopien: 1,
@@ -35,7 +41,7 @@ export const SLOWNIK = {
 const S = '2026-11-23';
 const BR = ['epic-br', 'epic-zb-2026'];
 
-export const MISJE = [
+const dotychczasowe = [
   // ---------------- ŁATWY ----------------
   { id: 'L01', trudnosc: 'latwy', tryby: ['build', 'zero'], tytul: 'Pierwsza krew',
     cel: 'Wyeliminuj jednego przeciwnika.',
@@ -184,33 +190,33 @@ export const MISJE = [
 
   // ---------------- EKSTREMALNY ----------------
   { id: 'E01', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Korona bez apteczki',
-    cel: 'Wygraj mecz bez leczenia zdrowia.',
+    cel: 'Wygraj bez leczenia zdrowia i zdobądź co najmniej 4 eliminacje.',
     odKiedy: 'Reguła przez cały mecz.',
-    zaliczenie: 'Victory Royale i ani jednego leczenia zdrowia.',
+    zaliczenie: 'Victory Royale, co najmniej 4 eliminacje i ani jednego leczenia zdrowia.',
     doprecyzowanie: ['leczenie'], wskazowka: 'Graj na tarczach i unikaj otwartego terenu.',
     zrodla: BR, sprawdzono: S },
   { id: 'E02', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Piątka bez skrzyń',
-    cel: '5 eliminacji i 5. miejsce albo wyższe.',
+    cel: 'Zdobądź co najmniej 5 eliminacji i miejsce 1–2 bez otwierania skrzyń.',
     odKiedy: 'Reguła przez cały mecz: nie otwierasz skrzyń.',
-    zaliczenie: '5 eliminacji, miejsce 1–5 i żadnej otwartej skrzyni.',
+    zaliczenie: 'Minimum 5 eliminacji, miejsce 1–2 i żadnej samodzielnie otwartej skrzyni.',
     doprecyzowanie: ['skrzynia', 'miejsce'], wskazowka: 'Pierwszą walkę wygraj łupem z podłogi. Potem żyj z pokonanych.',
     zrodla: ['epic-skrzynie', ...BR], sprawdzono: S },
   { id: 'E03', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Wierny jednej broni',
-    cel: 'Zajmij 5. miejsce albo wyższe, strzelając tylko pierwszą podniesioną bronią.',
+    cel: 'Wygraj i zdobądź co najmniej 3 eliminacje, strzelając wyłącznie z pierwszej podniesionej broni.',
     odKiedy: 'Reguła od pierwszego podniesienia broni do końca meczu.',
-    zaliczenie: 'Miejsce 1–5 i żaden strzał z innej broni.',
+    zaliczenie: 'Victory Royale, minimum 3 eliminacje i zero strzałów z innych broni.',
     doprecyzowanie: ['bron', 'miejsce'], wskazowka: 'Inne bronie możesz nosić. Strzelać nimi nie.',
     zrodla: BR, sprawdzono: S },
   { id: 'E04', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Oko burzy',
-    cel: 'Zajmij 3. miejsce albo wyższe.',
+    cel: 'Zajmij miejsce 1–2 z co najmniej 4 eliminacjami.',
     odKiedy: 'Reguła przez cały mecz: bez obrażeń od burzy i bez leczenia zdrowia.',
-    zaliczenie: 'Miejsce 1–3, zero obrażeń od burzy i ani jednego leczenia zdrowia.',
+    zaliczenie: 'Miejsce 1–2, minimum 4 eliminacje, zero obrażeń od burzy i ani jednego leczenia zdrowia.',
     doprecyzowanie: ['leczenie', 'miejsce'], wskazowka: 'Wejdź w środek kręgu wcześnie i trzymaj pozycję.',
     zrodla: BR, sprawdzono: S },
   { id: 'E05', trudnosc: 'ekstremalny', tryby: ['build'], tytul: 'Zero w trybie Build',
-    cel: 'Zajmij 3. miejsce albo wyższe bez budowania.',
+    cel: 'Wygraj Build z co najmniej 4 eliminacjami bez budowania.',
     odKiedy: 'Reguła przez cały mecz: nie stawiasz żadnej konstrukcji.',
-    zaliczenie: 'Miejsce 1–3 i ani jednej postawionej konstrukcji.',
+    zaliczenie: 'Victory Royale, minimum 4 eliminacje i ani jednej postawionej konstrukcji.',
     doprecyzowanie: ['miejsce'], wskazowka: 'Inni budują. Ty szukasz naturalnych osłon i flanek.',
     zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
   { id: 'E06', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Wygraj bez strzelby',
@@ -221,17 +227,32 @@ export const MISJE = [
     zrodla: ['epic-strzelby', 'epic-br'], sprawdzono: S },
 ];
 
-export const MIN_KART = 4; // trzy rundy + jedna wymiana
+export const MISJE = [
+  ...dotychczasowe.map(m => ({
+    ...m,
+    sklady: ['solo', 'duo'],
+    kategoria: m.doprecyzowanie.includes('strzelba') ? 'Bez strzelby'
+      : m.tryby.length === 1 ? TRYBY[m.tryby[0]].nazwa : 'Taktyka',
+    weryfikacja: 'Mechaniki Battle Royale udokumentowane w źródłach. Wynik oceniają gracze.',
+  })),
+  ...DODATKOWE_MISJE,
+];
 
-export const misja = id => MISJE.find(m => m.id === id) || null;
-export const trudnosc = id => TRUDNOSCI.find(t => t.id === id) || null;
+export const LEGENDARNA = Object.freeze({
+  id: 'S01', tytul: 'Wygraj bez broni', trudnosc: 'specjalna', kategoria: 'Bez broni',
+  tryby: ['build', 'zero'], sklady: ['solo', 'duo'], odKiedy: 'Od początku do końca meczu.',
+  cel: 'Zdobądź Victory Royale bez podnoszenia ani noszenia broni i bez atakowania rywali.',
+  zaliczenie: 'Victory Royale, żadnej podniesionej broni i zero ataków lub obrażeń przeciwników bronią, kilofem, ofensywnym przedmiotem albo zdolnością.',
+  wskazowka: 'Automatycznie przyznaną broń natychmiast odrzuć bez użycia. Leczenie, osłony i mobilność są dozwolone, o ile nie służą do zaatakowania rywala.',
+  doprecyzowanie: [], zrodla: ['epic-br'], sprawdzono: '2026-11-23',
+  weryfikacja: 'Solo i Duo w Battle Royale. Zasady specjalne rozliczane ręcznie. Karta niewykonalna może zostać pominięta.',
+});
 
-// Karty pasujące do konfiguracji, w kolejności stałej.
-export function pula(tryb, trud) {
-  return MISJE.filter(m => m.trudnosc === trud && m.tryby.includes(tryb));
-}
-
-// Czy konfiguracja ma dość kart na pełną serię.
-export function dostepna(tryb, trud) {
-  return pula(tryb, trud).length >= MIN_KART;
-}
+const poId = new Map([...MISJE, LEGENDARNA].map(m => [m.id, m]));
+export const MIN_KART = 4;
+export const misja = id => poId.get(id) ?? null;
+export const trudnosc = id => TRUDNOSCI.find(t => t.id === id) ||
+  (id === 'specjalna' ? { id, nazwa: 'Legendarna', kod: 'MISJA SPECJALNA' } : null);
+export const pula = (tryb, trud, sklad = 'solo') => MISJE.filter(m =>
+  m.trudnosc === trud && m.tryby.includes(tryb) && m.sklady.includes(sklad));
+export const dostepna = (tryb, trud, sklad = 'solo') => pula(tryb, trud, sklad).length >= MIN_KART;

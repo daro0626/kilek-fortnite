@@ -32,18 +32,6 @@ body[data-trud="ekstremalny"], .t-ekstremalny {
   --acc-rgb: 255,134,185;
 }
 body[data-trud="ekstremalny"] { --noc: #120a22; --noc-2: #261332; --panel: #281934; }
-html[data-motyw="holo"] {
-  --noc: #080f24;
-  --noc-2: #181c43;
-  --panel: #171c3e;
-  --linia: #454b79;
-  --scena-min: #222556;
-  --scena-max: #5642b6;
-  --scena-krawedz: #aff2ff;
-  --scena-akcent: #7adef6;
-  --fiolet: #bdb0ff;
-}
-
 .portal-wrap {
   width: min(100% - 48px, var(--portal-szer));
   margin-inline: auto;
@@ -218,78 +206,6 @@ body[data-dzial="start"] .portal-cta { animation: portal-cta .52s var(--ease) .1
   display: grid;
   place-items: center;
 }
-.scena-podloga {
-  position: absolute;
-  inset: 49% 2% 0;
-  background:
-    repeating-linear-gradient(90deg, #ad88ff2a 0 1px, transparent 1px 35px),
-    repeating-linear-gradient(0deg, #ad88ff2a 0 1px, transparent 1px 35px),
-    radial-gradient(ellipse at 50% 0, #aa67ed55, transparent 70%);
-  transform: rotateX(53deg);
-  -webkit-mask: radial-gradient(closest-side, #000 26%, transparent);
-  mask: radial-gradient(closest-side, #000 26%, transparent);
-}
-.scena-uklad {
-  position: relative;
-  width: min(88%, 440px);
-  aspect-ratio: 1.12;
-  transform-style: preserve-3d;
-  transform: rotateX(var(--scena-x, -5deg)) rotateY(var(--scena-y, -8deg));
-  transition: transform .3s var(--ease);
-}
-.scena-orbita {
-  position: absolute;
-  inset: 11% 0 12%;
-  border: 1px solid #bb97fc8a;
-  border-radius: 50%;
-  transform: rotate(-28deg) rotateX(42deg);
-}
-.scena-orbita-b { transform: rotate(31deg) rotateX(48deg); border-color: #fea67875; }
-.scena-karta {
-  position: absolute;
-  width: 43%;
-  aspect-ratio: .72;
-  top: 12%;
-  left: 28.5%;
-  border: 2px solid var(--scena-krawedz);
-  border-radius: 18px 6px;
-  background:
-    repeating-linear-gradient(148deg, transparent 0 26px, #fff2 27px 28px),
-    linear-gradient(150deg,var(--scena-max),var(--scena-min) 78%);
-  box-shadow: 0 16px 40px #040313aa, 0 0 28px #a46df359;
-}
-.scena-karta-lewa { transform: translate3d(-52%,9%, -24px) rotate(-21deg); opacity: .68; }
-.scena-karta-prawa { transform: translate3d(50%,6%, -12px) rotate(23deg); border-color: var(--scena-akcent); opacity: .78; }
-.scena-karta-glowna {
-  display: grid;
-  place-items: center;
-  transform: translateZ(34px) rotate(-8deg);
-  color: #fff7ff;
-}
-.scena-karta-glowna::before {
-  content: "";
-  position: absolute;
-  inset: 10%;
-  background: linear-gradient(132deg,#fcd4ff40,#a96fff08 63%,#ff9a4b49);
-  border: 1px solid #fff8;
-  border-radius: 14px 3px;
-}
-.scena-karta-glowna span {
-  z-index: 1;
-  font: 800 italic clamp(72px, 12vw, 158px)/.9 var(--disp);
-  text-shadow: 5px 4px #4e2c94;
-}
-.scena-podest {
-  position: absolute;
-  inset: 71% 2% 3%;
-  border: 2px solid var(--scena-akcent);
-  border-radius: 50%;
-  transform: rotateX(44deg);
-  box-shadow: 0 0 22px #f48d5a50, inset 0 0 24px #ad79f346;
-}
-body[data-dzial="start"] .scena-uklad { animation: scena-wejscie .85s var(--ease) both; }
-@keyframes scena-wejscie { from { opacity: .3; transform: translateY(22px) rotateX(18deg) rotateY(-26deg) scale(.86); } }
-
 .portal-kafle {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -414,26 +330,6 @@ body[data-dzial="start"] .scena-uklad { animation: scena-wejscie .85s var(--ease
 .katalog-karta .katalog-tryby { color: var(--tekst-2); font-size: 14px; }
 #potwierdz-serie h2, #potwierdz-serie p { margin: 0; }
 #potwierdz-serie .btn { min-height: 48px; }
-
-html[data-motyw="holo"] .portal-hero::before {
-  background:
-    radial-gradient(ellipse at 76% 50%, #455bcc55, transparent 56%),
-    repeating-linear-gradient(0deg,transparent 0 37px,#97b6ff12 38px 39px);
-}
-html[data-motyw="holo"] .portal-logo-kilek { text-shadow: .04em .04em #613bc8; }
-html[data-motyw="holo"] .portal-logo-challenge {
-  color: #cdf5ff;
-  text-shadow: .042em .035em #265373;
-}
-html[data-motyw="holo"] .scena-karta { border-radius: 33px 3px; box-shadow: 0 0 32px #829cfa55; }
-html[data-motyw="holo"] .scena-orbita { border-style: dashed; }
-html[data-motyw="holo"] .scena-orbita-b { border-color: #8edfff83; }
-html[data-motyw="holo"] .portal-kafel { background: linear-gradient(125deg,#232854,#14172c); border-color: #5c6391; }
-html[data-motyw="holo"] .portal-menu a[aria-current="page"] { background: #24254c; }
-html[data-motyw="holo"] .karta { background: linear-gradient(148deg,#eef7ff,#dce3ff); border-color: #a8d6f4; border-radius: 18px 4px; }
-html[data-motyw="holo"] .karta-gora { background: linear-gradient(105deg,#1c2348,#354b87); }
-html[data-motyw="holo"] .karta.t-ekstremalny .karta-gora { background: linear-gradient(105deg,#262147,#593665); }
-html[data-motyw="holo"] .karta-zasady .zal { background: #2c72a022; }
 
 @media (min-width: 900px) {
   .ekran:has(.widok-stol) { max-width: 1020px; padding-top: 28px; }
