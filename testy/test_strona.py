@@ -120,7 +120,8 @@ def pelna_seria(browser, w, h, dotyk):
     expect(page.locator('#kartaTytul')).to_be_visible()
     assert etap(page) == 'karta' and karta_id(page) == pierwsza
     bez_przewijania_w_bok(page, f'karta {w}')
-    # wymiana
+    # wymiana wymaga potwierdzenia porzucenia karty
+    klik(page, '[data-akcja=wymien]', dotyk)
     klik(page, '[data-akcja=wymien]', dotyk)
     expect(page.locator('.rama')).to_have_attribute('data-faza', re.compile('zakryta|odkryta|rozdawanie'), timeout=3000)
     page.wait_for_function("JSON.parse(localStorage.getItem('kc:fortnite')).seria.wymiana === true")
@@ -162,10 +163,10 @@ def pelna_seria(browser, w, h, dotyk):
         if runda == 0 and w == 390:
             page.locator('select[name=trud-rundy]').select_option('normalny')
             page.wait_for_function("JSON.parse(localStorage.getItem('kc:fortnite')).seria.rundy.at(-1).karta.startsWith('N')")
-            expect(page.locator('.hud-gracz.p0 b')).to_have_text('1')
+            expect(page.locator('.hud-gracz.p0 b')).to_have_text('5')
     expect(page.locator('.final-tytul')).to_have_text('Wygrywa Gracz Alfa!')
     page.wait_for_timeout(800)
-    expect(page.locator('.kolumna.p0 .sr')).to_have_text('3 pkt')
+    expect(page.locator('.kolumna.p0 .sr')).to_have_text('11 pkt' if w == 390 else '15 pkt')
     expect(page.locator('.kolumna.p1 .sr')).to_have_text('0 pkt')
     bez_przewijania_w_bok(page, f'finał {w}')
     # korekta w finale prowadzi do remisu
@@ -297,11 +298,10 @@ def zapis_uszkodzony_i_reset(browser):
     ok('uszkodzony zapis i reset tylko danych Fortnite')
 
 
-def brak_kart(browser):
-    ctx = kontekst(browser, 390, 844, True)
+def przerwanie_serii(browser):
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
     page, bledy = strona(ctx)
     page.goto(URL + '#wyzwania')
-    klik(page, 'label.tryb:has(input[value=zero])', True)  # Zero Build/Łatwy ma 4 karty
     klik(page, '[data-akcja=rozpocznij]', True)
     odkryj_karte(page, True)
     klik(page, '[data-akcja=graj]', True)
@@ -309,22 +309,16 @@ def brak_kart(browser):
     klik(page, '.panel-gracza.p0 .opcja.tak', True)
     klik(page, '.panel-gracza.p1 .opcja.nie', True)
     klik(page, '[data-akcja=zatwierdz]', True)
-    for _ in range(3):
-        page.wait_for_timeout(300)
-        odkryj_karte(page, True)
-        expect(page.locator('[data-akcja=uniewaznij]')).to_be_visible(timeout=3000)
-        klik(page, '[data-akcja=uniewaznij]', True)
-        klik(page, '[data-akcja=uniewaznij]', True)
-        page.wait_for_timeout(350)
-    expect(page.locator('.widok-brak')).to_be_visible()
-    page.reload()
-    expect(page.locator('.widok-brak')).to_be_visible()
     klik(page, '[data-akcja=zakoncz]', True)
+    expect(page.locator('#potwierdz-serie')).to_be_visible()
+    klik(page, '#potwierdz-serie [value=reset]', True)
     expect(page.locator('.final-tytul')).to_have_text('Wygrywa Gracz 1!')
     expect(page.locator('.widok-final .nota')).to_contain_text('1 z 3')
+    page.reload()
+    expect(page.locator('.kolumna.p0 .sr')).to_have_text('1 pkt')
     assert not bledy, bledy
     ctx.close()
-    ok('brak kolejnej karty: zakończenie serii z zachowaniem wyniku')
+    ok('przerwanie serii po potwierdzeniu i zachowanie rozegranej rundy')
 
 
 def reset_nowszego_zapisu(browser):
@@ -350,7 +344,7 @@ def reset_nowszego_zapisu(browser):
 def portal_i_swobodne_losowanie(browser):
     ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
     page, bledy = strona(ctx)
-    page.goto(URL + '?motyw=holo')
+    page.goto(URL)
     klik(page, '[data-akcja=graj-od-razu]', True)
     odkryj_karte(page, True)
     pierwsza = karta_id(page)
@@ -398,6 +392,143 @@ def portal_i_swobodne_losowanie(browser):
     ok('Start, katalog, Wstecz, ta sama karta, dowolna liczba losowań, trudność i potwierdzenie resetu')
 
 
+def dzial(page, nazwa, dotyk):
+    link = page.locator(f'[data-nav={nazwa}]')
+    if not link.is_visible():
+        klik(page, '.portal-menu-toggle', dotyk)
+    klik(page, f'[data-nav={nazwa}]', dotyk)
+    expect(page.locator(f'main section[data-dzial={nazwa}]')).to_be_visible()
+
+
+def legendarne_wyniki(browser):
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
+    page, bledy = strona(ctx)
+    page.goto(URL + '#wyzwania')
+    for sposob, punkty in [('start', [25, 25]), ('duet', [25])]:
+        klik(page, f'[data-akcja=legendarna-{sposob}]', True)
+        expect(page.locator('.stol-stawka')).to_contain_text('25 pkt')
+        odkryj_karte(page, True)
+        expect(page.locator('#kartaTytul')).to_have_text('Wygraj bez broni')
+        expect(page.locator('.karta')).to_contain_text('kilofem')
+        klik(page, '[data-akcja=graj]', True)
+        page.reload()
+        assert karta_id(page) == 'S01'
+        klik(page, '[data-akcja=rozlicz]', True)
+        expect(page.locator('.panel-gracza')).to_have_count(len(punkty))
+        for i in range(len(punkty)):
+            klik(page, f'.panel-gracza.p{i} .opcja.tak', True)
+        page.locator('[data-akcja=zatwierdz]').dblclick()
+        expect(page.locator('.kolumna .sr')).to_have_text(['25 pkt'] * len(punkty))
+        page.reload()
+        zapis = page.evaluate("JSON.parse(localStorage.getItem('kc:fortnite'))")
+        assert zapis['historia'][0]['punkty'] == punkty
+        assert zapis['historia'][0]['rundy'][0]['punkty'] == 25
+        assert len(zapis['historia']) == (1 if sposob == 'start' else 2)
+        dzial(page, 'turnieje', True)
+        expect(page.locator('.odznaki').filter(has_text='Legendarne 25').first).to_be_visible()
+        dzial(page, 'wyzwania', True)
+        if sposob == 'start':
+            klik(page, '[data-akcja=popraw][data-g="1"]', True)
+            expect(page.locator('.kolumna.p1 .sr')).to_have_text('0 pkt')
+            klik(page, '[data-akcja=konfiguracja]', True)
+            klik(page, '#potwierdz-serie [value=reset]', True)
+    assert not bledy, bledy
+    ctx.close()
+    ok('Legendarna: remis 25:25, pojedyncze 25 duetu, korekta, odświeżenie i lokalny ranking')
+
+
+def dzialy_i_opinie(browser):
+    for w, h, dotyk in ROZMIARY:
+        ctx = kontekst(browser, w, h, dotyk, reduced_motion='reduce')
+        page, bledy = strona(ctx)
+        page.goto(URL)
+        expect(page.locator('.arena-obrot')).to_be_visible()
+        page.wait_for_function("""() => {
+            const canvas = document.querySelector('#arena-canvas');
+            const pixels = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
+            return pixels.some((value, i) => i % 4 === 3 && value > 100);
+        }""", timeout=6000)
+        obraz = page.locator('#arena-canvas').evaluate('(el) => el.toDataURL()')
+        klik(page, '.arena-obrot', dotyk)
+        page.wait_for_function("(obraz) => document.querySelector('#arena-canvas').toDataURL() !== obraz", arg=obraz)
+        klik(page, '[data-akcja=graj-od-razu]', dotyk)
+        odkryj_karte(page, dotyk)
+        misja = karta_id(page)
+        dzial(page, 'zbrojownia', dotyk)
+        bez_przewijania_w_bok(page, f'zbrojownia {w}')
+        expect(page.locator('#sprzet-opcje button')).to_have_count(12)
+        expect(page.locator('#sprzet-karta')).to_contain_text('Wyścigówa Usoppa')
+        expect(page.locator('#sprzet-karta')).to_contain_text('Blitz Royale')
+        page.locator('#model-obrot').press('End')
+        expect(page.locator('.model-svg')).to_have_attribute('style', re.compile('55deg'))
+        page.locator('[data-porownaj]').first.select_option('proca')
+        expect(page.locator('#porownanie-wynik')).to_contain_text('Wyścigówa Usoppa')
+        dzial(page, 'akademia', dotyk)
+        bez_przewijania_w_bok(page, f'akademia {w}')
+        expect(page.locator('[data-lekcja]')).to_have_count(10)
+        for i, id in [(0, 'strefa'), (2, 'cel'), (3, 'dystans'), (4, 'oslona')]:
+            klik(page, f'[data-lekcja="{i}"]', dotyk)
+            expect(page.locator(f'.demo-scena.demo-{id}')).to_be_visible()
+            suwak = page.locator('#lekcja-demo input')
+            suwak.press('Home')
+            suwak.press('ArrowRight')
+            if id == 'cel':
+                suwak.evaluate("(el) => { el.value = 74; el.dispatchEvent(new Event('input', { bubbles: true })); }")
+                klik(page, '#lekcja-demo button', dotyk)
+                expect(page.locator('#lekcja-demo [role=status]')).to_contain_text('Trafienie · 1/1')
+        for i in range(3):
+            klik(page, f'#quiz-form label:has(input[name="quiz-{i}"][value="{i}"])', dotyk)
+        klik(page, '#quiz-form button', dotyk)
+        expect(page.locator('#quiz-wynik')).to_contain_text('3/3')
+        dzial(page, 'aktualnie', dotyk)
+        bez_przewijania_w_bok(page, f'aktualnie {w}')
+        expect(page.locator('#aktualnie article')).to_have_count(5)
+        dzial(page, 'turnieje', dotyk)
+        bez_przewijania_w_bok(page, f'turnieje {w}')
+        dzial(page, 'wyzwania', dotyk)
+        assert karta_id(page) == misja
+        expect(page.locator('#kartaTytul')).to_be_visible()
+        dzial(page, 'misje', dotyk)
+        bez_przewijania_w_bok(page, f'katalog {w}')
+        page.locator('#katalog-kategoria').select_option('Bez broni')
+        expect(page.locator('.katalog-karta')).to_have_count(1)
+        klik(page, '[data-misja=S01] summary', dotyk)
+        page.locator('[data-misja=S01] select[name=ocena]').select_option('w sam raz')
+        page.locator('[data-misja=S01] input[name=notatka]').fill('Próba lokalna')
+        klik(page, '[data-misja=S01] button[type=submit]', dotyk)
+        expect(page.locator('[data-misja=S01] .katalog-ocena')).to_have_text('Moja ocena: w sam raz')
+        assert 'Próba lokalna' in page.locator('#katalog-podsumowanie').input_value()
+        page.reload()
+        assert 'Próba lokalna' in page.locator('#katalog-podsumowanie').input_value()
+        assert not bledy, bledy
+        ctx.close()
+    ok('siedem działów, arena, porównanie, cztery demonstracje, quiz i opinie na czterech ekranach')
+
+
+def migracja_legacy_w_ui(browser):
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
+    page, bledy = strona(ctx)
+    page.goto(URL)
+    page.evaluate("""localStorage.setItem('kc:fortnite', JSON.stringify({
+      v:2, etap:'karta', tryb:'build', trudnosc:'ekstremalny', sposob:'seria', gracze:['Iskra','Błysk'],
+      seria:{pokazane:['E01','E04'],rundy:[{karta:'E01',wyniki:[1,1],odkryta:true},{karta:'E04',wyniki:[null,null],odkryta:true}]}
+    }))""")
+    page.goto(URL + '#wyzwania')
+    page.reload()
+    expect(page.locator('#kartaTytul')).to_have_text('Oko burzy')
+    expect(page.locator('.karta-meta')).to_contain_text('1 pkt · legacy')
+    expect(page.locator('.hud-gracz.p0 b')).to_have_text('1')
+    page.locator('select[name=trud-rundy]').select_option('normalny')
+    expect(page.locator('#potwierdz-serie')).to_be_visible()
+    klik(page, '#potwierdz-serie [value=reset]', True)
+    odkryj_karte(page, True)
+    expect(page.locator('.karta-meta')).to_contain_text('3 pkt')
+    expect(page.locator('.hud-gracz.p0 b')).to_have_text('1')
+    assert not bledy, bledy
+    ctx.close()
+    ok('migracja legacy, potwierdzenie porzucenia i punktacja następnej rundy')
+
+
 if __name__ == '__main__':
     with sync_playwright() as pw:
         browser = pw.chromium.launch(executable_path=os.getenv('CHROMIUM_PATH'), args=['--enable-unsafe-swiftshader'])
@@ -408,8 +539,11 @@ if __name__ == '__main__':
         zapis_zablokowany(browser)
         zapis_uszkodzony_i_reset(browser)
         reset_nowszego_zapisu(browser)
-        brak_kart(browser)
+        przerwanie_serii(browser)
         portal_i_swobodne_losowanie(browser)
+        legendarne_wyniki(browser)
+        dzialy_i_opinie(browser)
+        migracja_legacy_w_ui(browser)
         browser.close()
     print(f'\n{len(wyniki)} testów przeglądarkowych: OK')
     sys.exit(0)
