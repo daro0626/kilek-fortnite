@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KILEK CHALLENGE: nieoficjalne wyzwania do meczów w Fortnite</title>
+<meta name="description" content="Strona fanowska. Dwóch graczy losuje zadanie przed meczem w Fortnite, gra i po meczu samodzielnie zaznacza wynik. Seria trzech rund na jednym telefonie.">
+<link rel="icon" href="data:,">
+<meta name="theme-color" content="#0a1626">
+<meta name="color-scheme" content="dark">
+<link rel="preload" href="fonts/barlow-condensed-latin-800-italic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fortnite.css">
+</head>
+<body data-etap="start" data-trud="latwy">
+<a class="skip" href="#ekran">Przejdź do gry</a>
+
+<!-- Mapa: tło dekoracyjne, rysowane w canvasie po pierwszym wyświetleniu -->
+<div class="mapa" id="mapa" aria-hidden="true">
+  <div class="mapa-plan" id="mapaPlan">
+    <canvas class="mapa-warstwice" id="warstwice"></canvas>
+    <div class="mapa-kafle" id="kafle"></div>
+    <div class="mapa-skaner"></div>
+    <div class="mapa-burza"></div>
+    <div class="mapa-znaczniki" id="znaczniki"></div>
+  </div>
+  <div class="mapa-mgla"></div>
+  <div class="mapa-lampa"></div>
+</div>
+
+<header class="hud" id="hud">
+  <div class="hud-in"><span class="hud-marka">KILEK CHALLENGE</span><button class="btn-ikona" type="button" data-akcja="info" aria-label="Zasady i zapis"><svg class="ik" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M16 14v9" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="16" cy="9.5" r="1.9" fill="currentColor"/></svg></button></div>
+</header>
+
+<main id="ekran" class="ekran" tabindex="-1">
+  <!-- Ekran startowy jest w HTML, żeby tytuł i przycisk były dostępne od pierwszej klatki. -->
+  <section class="widok widok-start" data-widok="start">
+    <h1 class="logo" data-fokus tabindex="-1">
+      <span class="logo-1" data-t="KILEK">KILEK</span>
+      <span class="logo-2">CHALLENGE</span>
+    </h1>
+    <p class="podtytul">Losujecie zadanie przed meczem w Fortnite. Gracie. Po meczu sami zaznaczacie, kto dał radę.</p>
+    <div id="konfiguracja" class="konfiguracja"></div>
+    <button class="btn btn-glowny btn-start" type="button" data-akcja="rozpocznij">Rozpocznij serię</button>
+    <p class="nota-zapisu" id="notaZapisu">Wyniki zapisują się tylko w tej przeglądarce.</p>
+  </section>
+</main>
+
+<div class="komunikat" id="komunikat" role="status" aria-live="polite"></div>
+<div class="sr" id="ogloszenie" aria-live="assertive"></div>
+
+<dialog class="arkusz" id="info" aria-labelledby="infoTytul"></dialog>
+
+<footer class="stopka">
+  <p>KILEK CHALLENGE to nieoficjalna strona fanowska. Nie jest powiązana z Epic Games ani przez nią zatwierdzona. „Fortnite” to znak towarowy Epic Games, użyty tu tylko po to, żeby opisać grę.</p>
+  <p class="disc" lang="en">Portions of the materials used are trademarks and/or copyrighted works of Epic Games, Inc. All rights reserved by Epic. This material is not official and is not endorsed by Epic.</p>
+  <p><a href="https://daro0626.github.io/kilekcraft/">KILEKCRAFT: Minecraft</a></p>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

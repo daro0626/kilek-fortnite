@@ -1,0 +1,212 @@
+// =========================================================
+// KILEK CHALLENGE: pula misji (v0.1, stan na 2026-11-23).
+// Każda misja opiera się wyłącznie na mechanikach opisanych w ZRODLA.md.
+// Bez nazwanego łupu sezonowego, lokacji i rzadkich zdarzeń.
+// =========================================================
+
+export const TRYBY = {
+  build: { id: 'build', nazwa: 'Build', opis: 'Z budowaniem.' },
+  zero: { id: 'zero', nazwa: 'Zero Build', opis: 'Bez budowania.' },
+};
+
+export const TRUDNOSCI = [
+  { id: 'latwy', nazwa: 'Łatwy', kod: 'ZWIAD', stopien: 1,
+    opis: 'Jedna prosta czynność. Masz ją pod kontrolą.' },
+  { id: 'normalny', nazwa: 'Normalny', kod: 'PATROL', stopien: 2,
+    opis: 'Cel i jedna krótka reguła.' },
+  { id: 'trudny', nazwa: 'Trudny', kod: 'SZTURM', stopien: 3,
+    opis: 'Mierzalny cel i ograniczenie, które go utrudnia.' },
+  { id: 'ekspert', nazwa: 'Ekspert', kod: 'OPERACJA', stopien: 4,
+    opis: 'Warunki się gryzą. Bez planu nie przejdziesz.' },
+  { id: 'ekstremalny', nazwa: 'Ekstremalny', kod: 'STREFA ZERO', stopien: 5,
+    opis: 'Reguła na cały mecz i bardzo wysoki próg.' },
+];
+
+// Wspólne definicje, do których odsyłają karty.
+export const SLOWNIK = {
+  leczenie: 'Leczenie zdrowia = każdy przedmiot albo zdolność, którą sam uruchamiasz i która dodaje zdrowie. Podnosić wolno, używać nie. Samoczynna regeneracja się nie liczy.',
+  tarcza: 'Tarcza = każdy przedmiot albo zdolność, którą sam uruchamiasz i która dodaje tarczę. Samoczynna nadtarcza w Zero Build się nie liczy.',
+  skrzynia: 'Otwarcie skrzyni = przytrzymanie przycisku interakcji przy skrzyni do końca. Łup z ziemi, z pokonanych i z innych pojemników jest dozwolony.',
+  miejsce: 'Miejsce odczytujesz z ekranu końca meczu. W trybie drużynowym liczy się miejsce drużyny.',
+  bron: 'Broń startowa, którą gra daje wszystkim na początku, nie liczy się jako podniesiona.',
+};
+
+const S = '2026-11-23';
+const BR = ['epic-br', 'epic-zb-2026'];
+
+export const MISJE = [
+  // ---------------- ŁATWY ----------------
+  { id: 'L01', trudnosc: 'latwy', tryby: ['build', 'zero'], tytul: 'Pierwsza krew',
+    cel: 'Wyeliminuj jednego przeciwnika.',
+    odKiedy: 'Od wylądowania do końca twojego meczu.',
+    zaliczenie: 'Na ekranie końca meczu masz co najmniej 1 eliminację.',
+    doprecyzowanie: [], wskazowka: 'Ląduj tam, gdzie widzisz kilka spadochronów, ale nie w samym tłumie.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'L02', trudnosc: 'latwy', tryby: ['build', 'zero'], tytul: 'Najlepsza dwudziestka piątka',
+    cel: 'Zajmij 25. miejsce albo wyższe.',
+    odKiedy: 'Cały mecz.',
+    zaliczenie: 'Ekran końca meczu pokazuje miejsce od 1 do 25.',
+    doprecyzowanie: ['miejsce'], wskazowka: 'Burza zmusza do ruchu. Idź do bezpiecznej strefy wcześniej niż inni.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'L03', trudnosc: 'latwy', tryby: ['build', 'zero'], tytul: 'Trzy skrzynie',
+    cel: 'Otwórz 3 skrzynie w jednym meczu.',
+    odKiedy: 'Od wylądowania.',
+    zaliczenie: 'Otworzyłeś trzecią skrzynię, zanim odpadłeś.',
+    doprecyzowanie: ['skrzynia'], wskazowka: 'Skrzynie słychać z bliska. Wejdź do budynku i nasłuchuj.',
+    zrodla: ['epic-skrzynie', ...BR], sprawdzono: S },
+  { id: 'L04', trudnosc: 'latwy', tryby: ['build', 'zero'], tytul: 'Pełny arsenał',
+    cel: 'Miej naraz 3 różne bronie w ekwipunku.',
+    odKiedy: 'Od wylądowania.',
+    zaliczenie: 'W jednej chwili w pasku ekwipunku są 3 różne bronie.',
+    doprecyzowanie: [], wskazowka: 'Broń startowa też się liczy, jeśli ją masz.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'L05', trudnosc: 'latwy', tryby: ['build'], tytul: 'Kilof w ruchu',
+    cel: 'Zbierz 200 materiałów kilofem.',
+    odKiedy: 'Od wylądowania.',
+    zaliczenie: 'Suma drewna, kamienia i metalu na ekranie wynosi co najmniej 200.',
+    doprecyzowanie: [], wskazowka: 'Drewno idzie najszybciej. Celuj w znacznik na obiekcie.',
+    zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
+
+  // ---------------- NORMALNY ----------------
+  { id: 'N01', trudnosc: 'normalny', tryby: ['build', 'zero'], tytul: 'Bez apteczki',
+    cel: 'Zajmij 20. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: nie leczysz zdrowia.',
+    zaliczenie: 'Miejsce 1–20 i ani razu nie użyłeś leczenia zdrowia.',
+    doprecyzowanie: ['leczenie', 'miejsce'], wskazowka: 'Tarcze wolno pić. Zbieraj je jak najwcześniej.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'N02', trudnosc: 'normalny', tryby: ['build', 'zero'], tytul: 'Pierwsza znaleziona',
+    cel: 'Zdobądź eliminację pierwszą podniesioną bronią.',
+    odKiedy: 'Od pierwszego podniesienia broni.',
+    zaliczenie: 'Eliminacja padła z broni, którą podniosłeś jako pierwszą.',
+    doprecyzowanie: ['bron'], wskazowka: 'Pierwszej broni nie wyrzucaj. Inne możesz mieć, ale strzelaj tą.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'N03', trudnosc: 'normalny', tryby: ['build', 'zero'], tytul: 'Zamknięte wieka',
+    cel: 'Zajmij 25. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: nie otwierasz skrzyń.',
+    zaliczenie: 'Miejsce 1–25 i żadnej otwartej skrzyni.',
+    doprecyzowanie: ['skrzynia', 'miejsce'], wskazowka: 'Szukaj łupu na podłodze w budynkach.',
+    zrodla: ['epic-skrzynie', ...BR], sprawdzono: S },
+  { id: 'N04', trudnosc: 'normalny', tryby: ['build', 'zero'], tytul: 'Dwie ręce',
+    cel: 'Zdobądź eliminację.',
+    odKiedy: 'Reguła od wylądowania: najwyżej 2 bronie naraz.',
+    zaliczenie: 'Co najmniej 1 eliminacja i nigdy więcej niż 2 bronie w ekwipunku.',
+    doprecyzowanie: ['bron'], wskazowka: 'Wybierz jedną broń na bliski i jedną na daleki dystans.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'N05', trudnosc: 'normalny', tryby: ['build'], tytul: 'Wysoka pozycja',
+    cel: 'Wyeliminuj przeciwnika, stojąc na własnej budowli.',
+    odKiedy: 'Od wylądowania.',
+    zaliczenie: 'W chwili eliminacji stoisz na konstrukcji, którą sam postawiłeś.',
+    doprecyzowanie: [], wskazowka: 'Dwie rampy i podłoga wystarczą, żeby patrzeć z góry.',
+    zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
+
+  // ---------------- TRUDNY ----------------
+  { id: 'T01', trudnosc: 'trudny', tryby: ['build', 'zero'], tytul: 'Twarda skóra',
+    cel: 'Zdobądź 2 eliminacje.',
+    odKiedy: 'Reguła od wylądowania: nie leczysz zdrowia i nie używasz tarcz.',
+    zaliczenie: '2 eliminacje i ani jednego użytego leczenia albo tarczy.',
+    doprecyzowanie: ['leczenie', 'tarcza'], wskazowka: 'Walcz z ukrycia. Każda rana zostaje do końca.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'T02', trudnosc: 'trudny', tryby: ['build', 'zero'], tytul: 'Dziesiątka bez skrzyń',
+    cel: 'Zajmij 10. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: nie otwierasz skrzyń.',
+    zaliczenie: 'Miejsce 1–10 i żadnej otwartej skrzyni.',
+    doprecyzowanie: ['skrzynia', 'miejsce'], wskazowka: 'Łup z pokonanych jest dozwolony. To twoje główne źródło.',
+    zrodla: ['epic-skrzynie', ...BR], sprawdzono: S },
+  { id: 'T03', trudnosc: 'trudny', tryby: ['build', 'zero'], tytul: 'Lekki bagaż',
+    cel: 'Zajmij 15. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: najwyżej 2 bronie naraz.',
+    zaliczenie: 'Miejsce 1–15 i nigdy więcej niż 2 bronie w ekwipunku.',
+    doprecyzowanie: ['miejsce', 'bron'], wskazowka: 'Puste miejsca zajmij tarczami i leczeniem.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'T04', trudnosc: 'trudny', tryby: ['build', 'zero'], tytul: 'Sucha stopa',
+    cel: 'Zajmij 15. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: ani raz nie wchodzisz do burzy.',
+    zaliczenie: 'Miejsce 1–15 i ani jednego punktu obrażeń od burzy.',
+    doprecyzowanie: ['miejsce'], wskazowka: 'Patrz na mapę po każdej walce. Następny krąg pokazuje się z wyprzedzeniem.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'T05', trudnosc: 'trudny', tryby: ['build'], tytul: 'Budowniczy na urlopie',
+    cel: 'Zdobądź 2 eliminacje i zajmij 20. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: nie stawiasz żadnej konstrukcji.',
+    zaliczenie: '2 eliminacje, miejsce 1–20 i ani jednej postawionej konstrukcji.',
+    doprecyzowanie: ['miejsce'], wskazowka: 'Zbieranie materiałów jest dozwolone. Budowanie nie.',
+    zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
+
+  // ---------------- EKSPERT ----------------
+  { id: 'X01', trudnosc: 'ekspert', tryby: ['build', 'zero'], tytul: 'Cień',
+    cel: 'Zajmij 10. miejsce albo wyższe bez żadnej eliminacji.',
+    odKiedy: 'Cały mecz.',
+    zaliczenie: 'Miejsce 1–10 i dokładnie 0 eliminacji.',
+    doprecyzowanie: ['miejsce'], wskazowka: 'Uciekaj z walk, zanim się zaczną. Strzelać możesz, wykańczać nie.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'X02', trudnosc: 'ekspert', tryby: ['build', 'zero'], tytul: 'Łowca bez apteczki',
+    cel: 'Zdobądź 3 eliminacje i zajmij 10. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: nie leczysz zdrowia.',
+    zaliczenie: '3 eliminacje, miejsce 1–10 i ani jednego leczenia zdrowia.',
+    doprecyzowanie: ['leczenie', 'miejsce'], wskazowka: 'Tarcza to twoje jedyne życie zapasowe. Zbieraj każdą.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'X03', trudnosc: 'ekspert', tryby: ['build', 'zero'], tytul: 'Jedna skrzynia',
+    cel: 'Zdobądź 2 eliminacje, otwierając dokładnie 1 skrzynię.',
+    odKiedy: 'Reguła od wylądowania.',
+    zaliczenie: '2 eliminacje i dokładnie 1 otwarta skrzynia w całym meczu.',
+    doprecyzowanie: ['skrzynia'], wskazowka: 'Zaplanuj, którą skrzynię otworzysz. Nie zużyj jej od razu.',
+    zrodla: ['epic-skrzynie', ...BR], sprawdzono: S },
+  { id: 'X04', trudnosc: 'ekspert', tryby: ['build', 'zero'], tytul: 'Dwa miejsca w plecaku',
+    cel: 'Zajmij 10. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: najwyżej 2 zajęte miejsca w pasku ekwipunku.',
+    zaliczenie: 'Miejsce 1–10 i nigdy więcej niż 2 zajęte miejsca w pasku.',
+    doprecyzowanie: ['miejsce'], wskazowka: 'Broń i tarcza czy dwie bronie? Zdecyduj przed lądowaniem.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'X05', trudnosc: 'ekspert', tryby: ['zero'], tytul: 'Bez osłony',
+    cel: 'Zdobądź 3 eliminacje i zajmij 15. miejsce albo wyższe.',
+    odKiedy: 'Reguła od wylądowania: nie używasz tarcz.',
+    zaliczenie: '3 eliminacje, miejsce 1–15 i ani jednej użytej tarczy.',
+    doprecyzowanie: ['tarcza', 'miejsce'], wskazowka: 'Samoczynna nadtarcza Zero Build działa. Daj jej czas po walce.',
+    zrodla: BR, sprawdzono: S },
+
+  // ---------------- EKSTREMALNY ----------------
+  { id: 'E01', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Korona bez apteczki',
+    cel: 'Wygraj mecz bez leczenia zdrowia.',
+    odKiedy: 'Reguła przez cały mecz.',
+    zaliczenie: 'Victory Royale i ani jednego leczenia zdrowia.',
+    doprecyzowanie: ['leczenie'], wskazowka: 'Graj na tarczach i unikaj otwartego terenu.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'E02', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Piątka bez skrzyń',
+    cel: '5 eliminacji i 5. miejsce albo wyższe.',
+    odKiedy: 'Reguła przez cały mecz: nie otwierasz skrzyń.',
+    zaliczenie: '5 eliminacji, miejsce 1–5 i żadnej otwartej skrzyni.',
+    doprecyzowanie: ['skrzynia', 'miejsce'], wskazowka: 'Pierwszą walkę wygraj łupem z podłogi. Potem żyj z pokonanych.',
+    zrodla: ['epic-skrzynie', ...BR], sprawdzono: S },
+  { id: 'E03', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Wierny jednej broni',
+    cel: 'Zajmij 5. miejsce albo wyższe, strzelając tylko pierwszą podniesioną bronią.',
+    odKiedy: 'Reguła od pierwszego podniesienia broni do końca meczu.',
+    zaliczenie: 'Miejsce 1–5 i żaden strzał z innej broni.',
+    doprecyzowanie: ['bron', 'miejsce'], wskazowka: 'Inne bronie możesz nosić. Strzelać nimi nie.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'E04', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Oko burzy',
+    cel: 'Zajmij 3. miejsce albo wyższe.',
+    odKiedy: 'Reguła przez cały mecz: bez obrażeń od burzy i bez leczenia zdrowia.',
+    zaliczenie: 'Miejsce 1–3, zero obrażeń od burzy i ani jednego leczenia zdrowia.',
+    doprecyzowanie: ['leczenie', 'miejsce'], wskazowka: 'Wejdź w środek kręgu wcześnie i trzymaj pozycję.',
+    zrodla: BR, sprawdzono: S },
+  { id: 'E05', trudnosc: 'ekstremalny', tryby: ['build'], tytul: 'Zero w trybie Build',
+    cel: 'Zajmij 3. miejsce albo wyższe bez budowania.',
+    odKiedy: 'Reguła przez cały mecz: nie stawiasz żadnej konstrukcji.',
+    zaliczenie: 'Miejsce 1–3 i ani jednej postawionej konstrukcji.',
+    doprecyzowanie: ['miejsce'], wskazowka: 'Inni budują. Ty szukasz naturalnych osłon i flanek.',
+    zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
+];
+
+export const MIN_KART = 4; // trzy rundy + jedna wymiana
+
+export const misja = id => MISJE.find(m => m.id === id) || null;
+export const trudnosc = id => TRUDNOSCI.find(t => t.id === id) || null;
+
+// Karty pasujące do konfiguracji, w kolejności stałej.
+export function pula(tryb, trud) {
+  return MISJE.filter(m => m.trudnosc === trud && m.tryby.includes(tryb));
+}
+
+// Czy konfiguracja ma dość kart na pełną serię.
+export function dostepna(tryb, trud) {
+  return pula(tryb, trud).length >= MIN_KART;
+}
