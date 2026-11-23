@@ -83,19 +83,22 @@ def pelna_seria(browser, w, h, dotyk):
     ctx = kontekst(browser, w, h, dotyk)
     page, bledy = strona(ctx)
     page.goto(URL)
-    expect(page.locator('h1.logo')).to_be_visible()
+    expect(page.locator('#portal-tytul')).to_be_visible()
+    bez_przewijania_w_bok(page, f'portal {w}')
+    klik(page, '[data-nav=wyzwania]', dotyk)
+    expect(page.locator('h1.gra-tytul')).to_be_visible()
     expect(page.locator('[data-akcja=rozpocznij]')).to_be_visible()
     expect(page.locator('footer')).to_contain_text('not endorsed by Epic')
     bez_przewijania_w_bok(page, f'start {w}')
     assert page.evaluate("""() => {
         const pozycja = sel => document.querySelector(sel).getBoundingClientRect();
-        const przycisk = pozycja('.btn-start');
-        return pozycja('.zasada-proby').bottom <= przycisk.top &&
-            przycisk.bottom <= pozycja('#notaZapisu').top;
+        const akcje = pozycja('.wybor-zabawy');
+        return pozycja('.zasada-proby').bottom <= akcje.top &&
+            akcje.bottom <= pozycja('#notaZapisu').top;
     }"""), 'przycisk startu nachodzi na tekst'
     page.fill('#g0', 'Gracz Alfa')
     page.fill('#g1', 'Gracz Beta')
-    # Build/Trudny ma 5 kart: wymiana + unieważnienie + 3 rundy
+    # Build/Trudny pokrywa wymianę, unieważnienie i trzy rundy
     klik(page, 'label.tryb:has(input[value=zero])', dotyk)
     klik(page, 'label.tryb:has(input[value=build])', dotyk)
     klik(page, 'label.t-trudny', dotyk)
@@ -156,6 +159,10 @@ def pelna_seria(browser, w, h, dotyk):
         page.locator('[data-akcja=zatwierdz]').dblclick()
         page.wait_for_timeout(400)
         assert page.evaluate("JSON.parse(localStorage.getItem('kc:fortnite')).seria.rundy.filter(r => !r.uniewazniona && r.wyniki.every(w => w !== null)).length") == runda + 1
+        if runda == 0 and w == 390:
+            page.locator('select[name=trud-rundy]').select_option('normalny')
+            page.wait_for_function("JSON.parse(localStorage.getItem('kc:fortnite')).seria.rundy.at(-1).karta.startsWith('N')")
+            expect(page.locator('.hud-gracz.p0 b')).to_have_text('1')
     expect(page.locator('.final-tytul')).to_have_text('Wygrywa Gracz Alfa!')
     page.wait_for_timeout(800)
     expect(page.locator('.kolumna.p0 .sr')).to_have_text('3 pkt')
@@ -174,7 +181,8 @@ def pelna_seria(browser, w, h, dotyk):
     klik(page, '[data-akcja=rewanz]', dotyk)
     expect(page.locator('.runda-tytul')).to_contain_text('Runda 1')
     st = page.evaluate("JSON.parse(localStorage.getItem('kc:fortnite'))")
-    assert st['gracze'] == ['Gracz Alfa', 'Gracz Beta'] and st['tryb'] == 'build' and st['trudnosc'] == 'trudny'
+    assert st['gracze'] == ['Gracz Alfa', 'Gracz Beta'] and st['tryb'] == 'build'
+    assert st['trudnosc'] == ('normalny' if w == 390 else 'trudny')
     assert st['seria']['rundy'][0]['karta'] != ostatnia
     assert not bledy, bledy
     ctx.close()
@@ -184,7 +192,7 @@ def pelna_seria(browser, w, h, dotyk):
 def klawiatura(browser):
     ctx = kontekst(browser, 1366, 820, False)
     page, bledy = strona(ctx)
-    page.goto(URL)
+    page.goto(URL + '#wyzwania')
     page.keyboard.press('Tab')
     expect(page.locator('.skip')).to_be_focused()
     # przejście klawiaturą do przycisku startu
@@ -227,7 +235,7 @@ def klawiatura(browser):
 def ograniczony_ruch(browser):
     ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
     page, bledy = strona(ctx)
-    page.goto(URL)
+    page.goto(URL + '#wyzwania')
     klik(page, '[data-akcja=rozpocznij]', True)
     klik(page, '.talia', True)
     # bez animacji: karta odkryta od razu
@@ -247,7 +255,7 @@ def zapis_zablokowany(browser):
       Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('zablokowane', 'SecurityError'); } });
     """)
     page, bledy = strona(ctx)
-    page.goto(URL)
+    page.goto(URL + '#wyzwania')
     expect(page.locator('#notaZapisu')).to_contain_text('odświeżenie strony ją skasuje')
     klik(page, '[data-akcja=rozpocznij]', True)
     odkryj_karte(page, True)
@@ -265,7 +273,7 @@ def zapis_zablokowany(browser):
 def zapis_uszkodzony_i_reset(browser):
     ctx = kontekst(browser, 390, 844, True)
     page, bledy = strona(ctx)
-    page.goto(URL)
+    page.goto(URL + '#wyzwania')
     page.evaluate("""() => {
       localStorage.setItem('kc:fortnite', '{zepsute');
       localStorage.setItem('kc:xp', '{"xp":12}');
@@ -279,7 +287,7 @@ def zapis_uszkodzony_i_reset(browser):
     klik(page, '#zk2', True)
     klik(page, '[data-reset]', True)
     klik(page, '[data-reset]', True)
-    expect(page.locator('h1.logo')).to_be_visible()
+    expect(page.locator('h1.gra-tytul')).to_be_visible()
     klucze = page.evaluate("Object.keys(localStorage).sort()")
     assert klucze == ['kc:parkour:rekordy', 'kc:xp'] or klucze == ['kc:fortnite', 'kc:parkour:rekordy', 'kc:xp'], klucze
     if 'kc:fortnite' in klucze:  # po resecie strona zapisuje czysty stan dopiero przy zmianie
@@ -292,8 +300,8 @@ def zapis_uszkodzony_i_reset(browser):
 def brak_kart(browser):
     ctx = kontekst(browser, 390, 844, True)
     page, bledy = strona(ctx)
-    page.goto(URL)
-    klik(page, 'label.t-ekspert', True)  # Build/Ekspert ma dokładnie 4 karty
+    page.goto(URL + '#wyzwania')
+    klik(page, 'label.tryb:has(input[value=zero])', True)  # Zero Build/Łatwy ma 4 karty
     klik(page, '[data-akcja=rozpocznij]', True)
     odkryj_karte(page, True)
     klik(page, '[data-akcja=graj]', True)
@@ -322,7 +330,7 @@ def brak_kart(browser):
 def reset_nowszego_zapisu(browser):
     ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
     page, bledy = strona(ctx)
-    page.goto(URL)
+    page.goto(URL + '#wyzwania')
     page.evaluate("localStorage.setItem('kc:fortnite', JSON.stringify({ v: 99 }))")
     page.reload()
     expect(page.locator('#komunikat')).to_contain_text('nowszej wersji')
@@ -339,6 +347,57 @@ def reset_nowszego_zapisu(browser):
     ok('reset zapisu z nowszej wersji ponownie włącza zapis serii')
 
 
+def portal_i_swobodne_losowanie(browser):
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
+    page, bledy = strona(ctx)
+    page.goto(URL + '?motyw=holo')
+    klik(page, '[data-akcja=graj-od-razu]', True)
+    odkryj_karte(page, True)
+    pierwsza = karta_id(page)
+    tytul = page.locator('#kartaTytul').inner_text()
+    klik(page, '[data-nav=start]', True)
+    expect(page.locator('#kontynuuj')).to_be_visible()
+    expect(page.locator('#portal-zapis')).to_contain_text(tytul)
+    klik(page, '[data-nav=misje]', True)
+    page.locator('#katalog-szukaj').fill('Wygraj bez strzelby')
+    page.locator('#katalog-tryb').select_option('zero')
+    page.locator('#katalog-trud').select_option('ekstremalny')
+    karta = page.locator('.katalog-karta')
+    expect(karta).to_have_count(1)
+    klik(page, '.katalog-karta summary', True)
+    expect(karta).to_contain_text('Victory Royale')
+    expect(karta).to_contain_text('Zero Build')
+    page.go_back()
+    expect(page.locator('#portal-tytul')).to_be_visible()
+    klik(page, '#kontynuuj', True)
+    expect(page.locator('#kartaTytul')).to_have_text(tytul)
+    page.reload()
+    expect(page.locator('#kartaTytul')).to_have_text(tytul)
+    assert karta_id(page) == pierwsza
+    for _ in range(7):
+        poprzednia = karta_id(page)
+        klik(page, '[data-akcja=wymien]', True)
+        odkryj_karte(page, True)
+        assert karta_id(page) != poprzednia
+    klik(page, '[data-akcja=graj]', True)
+    klik(page, '[data-akcja=kolejna-swobodna]', True)
+    expect(page.locator('.rama')).to_have_attribute('data-faza', 'talia')
+    page.locator('select[name=trud-rundy]').select_option('ekstremalny')
+    odkryj_karte(page, True)
+    assert karta_id(page).startswith('E')
+    klik(page, '[data-akcja=konfiguracja]', True)
+    expect(page.locator('#potwierdz-serie')).to_be_visible()
+    page.keyboard.press('Escape')
+    expect(page.locator('#kartaTytul')).to_be_visible()
+    klik(page, '[data-akcja=konfiguracja]', True)
+    klik(page, '#potwierdz-serie [value=reset]', True)
+    expect(page.locator('h1.gra-tytul')).to_be_visible()
+    assert etap(page) == 'start'
+    assert not bledy, bledy
+    ctx.close()
+    ok('Start, katalog, Wstecz, ta sama karta, dowolna liczba losowań, trudność i potwierdzenie resetu')
+
+
 if __name__ == '__main__':
     with sync_playwright() as pw:
         browser = pw.chromium.launch(executable_path=os.getenv('CHROMIUM_PATH'), args=['--enable-unsafe-swiftshader'])
@@ -350,6 +409,7 @@ if __name__ == '__main__':
         zapis_uszkodzony_i_reset(browser)
         reset_nowszego_zapisu(browser)
         brak_kart(browser)
+        portal_i_swobodne_losowanie(browser)
         browser.close()
     print(f'\n{len(wyniki)} testów przeglądarkowych: OK')
     sys.exit(0)

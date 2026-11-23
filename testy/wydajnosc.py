@@ -31,7 +31,7 @@ with sync_playwright() as p:
     cdp.send('Emulation.setCPUThrottlingRate',{'rate':RATE})
     pg.add_init_script(PROBE)
     pg.goto(URL); pg.evaluate('window.__on=true'); pg.wait_for_timeout(1500); stats(pg,'start + układanie mapy')
-    pg.locator('.t-ekstremalny').tap(); pg.wait_for_timeout(600); stats(pg,'zmiana trudności')
+    pg.locator('[data-nav=wyzwania]').tap(); pg.locator('label.t-ekstremalny').tap(); pg.wait_for_timeout(600); stats(pg,'zmiana trudności')
     # opóźnienie reakcji na dotyk
     lat=pg.evaluate('''()=>new Promise(r=>{const b=document.querySelector('[data-akcja=rozpocznij]');const t0=performance.now();
       b.addEventListener('pointerdown',()=>requestAnimationFrame(()=>r(Math.round(performance.now()-t0))),{once:true});

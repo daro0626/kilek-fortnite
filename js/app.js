@@ -5,6 +5,7 @@ import * as S from './seria.js';
 import { TRYBY, TRUDNOSCI, SLOWNIK, misja, dostepna, pula, MIN_KART, trudnosc } from './misje.js';
 import { wczytaj, zapisz, wyczysc } from './zapis.js';
 import { INSYGNIA, IKONY, ODZNAKA, rewers, awatar } from './grafika.js';
+import { aktualizujPortal, przejdzDo, uruchomPortal } from './portal.js';
 import * as fx from './fx.js';
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -55,14 +56,24 @@ function motyw() {
 async function render(stary = null) {
   motyw();
   renderHud();
+  aktualizujPortal(stan);
   const zmianaWidoku = !stary || widok(stary) !== widok(stan) ||
     (STOL.includes(stan.etap) && S.runda(stary)?.karta !== S.runda(stan)?.karta);
   if (!zmianaWidoku) { aktualizuj(stary); return; }
   const poprzedni = ekran.firstElementChild;
-  if (stary && poprzedni) await fx.wyjscie(poprzedni);
+  const poprzedniaKarta = $('.karta-wrap', ekran);
+  const losujPoWymianie = ['wymien', 'uniewaznij'].includes(ostatniaAkcja);
+  const wymiana = losujPoWymianie || ostatniaAkcja === 'kolejna-swobodna';
+  if (stary && poprzedni && !ekran.closest('[hidden]')) {
+    poprzedni.inert = true;
+    if (wymiana && poprzedniaKarta) await fx.odrzuc(poprzedniaKarta, ostatniaAkcja === 'wymien' ? -1 : 1);
+    else await fx.wyjscie(poprzedni);
+    if (!poprzedni.isConnected) return;
+  }
   ekran.innerHTML = rysujWidok();
+  if (document.body.dataset.dzial !== 'wyzwania') return podlacz();
   scrollTo({ top: 0, behavior: 'instant' });
-  podlacz(stary);
+  podlacz(stary, losujPoWymianie);
   const f = $('[data-fokus]', ekran);
   if (stary && f) f.focus({ preventScroll: true });
 }
@@ -91,8 +102,8 @@ function aktualizuj(stary) {
 // ---------------- HUD ----------------
 function renderHud() {
   const s = stan;
-  hud.hidden = false;
-  const wSerii = s.etap !== 'start';
+  hud.hidden = s.etap === 'start' || S.swobodny(s);
+  if (hud.hidden) return;
   const p = S.punkty(s);
   const nr = S.numerRundy(s);
   const kropki = [0, 1, 2].map(i => {
@@ -102,24 +113,23 @@ function renderHud() {
   }).join('');
   hud.innerHTML = `
     <div class="hud-in">
-      ${wSerii ? `
-      <h1 class="sr">KILEK CHALLENGE</h1>
       <div class="hud-runda" role="img" aria-label="Runda ${Math.min(nr, 3)} z 3">${kropki}</div>
       <div class="hud-wynik" role="group" aria-label="Wynik: ${esc(s.gracze[0])} ${p[0]}, ${esc(s.gracze[1])} ${p[1]}">
         <span class="hud-gracz p0">${awatar(s.gracze[0], 0, 'mini')}<span class="hud-nazwa">${esc(s.gracze[0])}</span><b>${p[0]}</b></span>
         <span class="hud-gracz p1"><b>${p[1]}</b><span class="hud-nazwa">${esc(s.gracze[1])}</span>${awatar(s.gracze[1], 1, 'mini')}</span>
-      </div>` : '<span class="hud-marka">KILEK CHALLENGE</span>'}
-      <button class="btn-ikona" type="button" data-akcja="info" aria-label="Zasady i zapis">${IKONY.info}</button>
+      </div>
     </div>`;
 }
 
 // ---------------- START ----------------
 function widokStart() {
   return `<section class="widok widok-start" data-widok="start">
-    <h1 class="logo" data-fokus tabindex="-1"><span class="logo-1" data-t="KILEK">KILEK</span><span class="logo-2">CHALLENGE</span></h1>
-    <p class="podtytul">Losujecie zadanie przed meczem w Fortnite. Gracie. Po meczu sami zaznaczacie, kto dał radę.</p>
+    <h1 class="gra-tytul" data-fokus tabindex="-1">Wyzwania</h1>
     <div id="konfiguracja" class="konfiguracja">${konfiguracja()}</div>
-    <button class="btn btn-glowny btn-start" type="button" data-akcja="rozpocznij">Rozpocznij serię</button>
+    <div class="akcje-rzad wybor-zabawy">
+      <button class="btn btn-glowny" type="button" data-akcja="rozpocznij-swobodnie">Losuj swobodnie</button>
+      <button class="btn btn-drugi" type="button" data-akcja="rozpocznij">Rozpocznij serię</button>
+    </div>
     <p class="nota-zapisu" id="notaZapisu">${notaZapisu()}</p>
   </section>`;
 }
@@ -226,7 +236,7 @@ function widokStol() {
   const nr = S.numerRundy(stan);
   return `<section class="widok widok-stol">
     <div class="stol-naglowek">
-      <h2 class="runda-tytul" data-fokus tabindex="-1">Runda <b>${nr}</b><span> z 3</span></h2>
+      <h2 class="runda-tytul" data-fokus tabindex="-1">${S.swobodny(stan) ? 'Swobodne losowanie' : `Runda <b>${nr}</b><span> z 3</span>`}</h2>
       <p class="stol-status" id="stolStatus">${statusStolu()}</p>
     </div>
     <div class="rama" data-faza="${faza}">
@@ -241,13 +251,16 @@ function widokStol() {
       </button>
     </div>
     <div class="plomien" aria-hidden="true"></div>
-    <div class="akcje" id="akcje">${akcjeStolu()}</div>
+    <div class="stol-panel">
+      <div class="akcje" id="akcje">${akcjeStolu()}</div>
+      <div id="stol-ustawienia">${ustawieniaStolu()}</div>
+    </div>
   </section>`;
 }
 
 function statusStolu() {
   if (stan.etap === 'mecz') return 'Mecz trwa. Karta zostaje tutaj, wróćcie do niej w każdej chwili.';
-  if (stan.etap === 'karta') return 'Ta sama karta obowiązuje obu graczy.';
+  if (stan.etap === 'karta') return S.swobodny(stan) ? 'Możesz zagrać tę kartę albo wylosować następną.' : 'Ta sama karta obowiązuje obu graczy.';
   if (faza === 'zakryta') return 'Karta czeka w ramce. Odkryjcie ją razem.';
   if (faza === 'rozdawanie') return 'Losuję…';
   return 'Karta jest już wylosowana i zapisana. Dotknijcie talii.';
@@ -261,6 +274,10 @@ function akcjeStolu() {
     return `<button class="btn btn-glowny" type="button" data-akcja="losuj">Losuj kartę</button>
       <button class="btn btn-cichy" type="button" data-akcja="pomin">Odkryj od razu</button>`;
   }
+  if (S.swobodny(s)) return s.etap === 'mecz'
+    ? '<button class="btn btn-glowny" type="button" data-akcja="kolejna-swobodna">Następna karta</button>'
+    : `<button class="btn btn-glowny" type="button" data-akcja="graj">Zaczynamy mecz</button>
+       <button class="btn btn-drugi" type="button" data-akcja="wymien">${IKONY.wymiana}Losuj nową kartę</button>`;
   const wymiana = S.mozeWymienic(s);
   const tekstWym = s.seria.wymiana ? 'Wymiana zużyta' : (wymiana ? 'Wymień kartę' : 'Brak kart do wymiany');
   if (s.etap === 'karta') return `
@@ -277,12 +294,28 @@ function akcjeStolu() {
     </div>`;
 }
 
+function wyborTrudnosciRundy() {
+  const dostepne = new Set(S.dostepneTrudnosci(stan).map(t => t.id));
+  return `<label class="stol-trudnosc">Trudność przed losowaniem
+    <select name="trud-rundy">
+      ${TRUDNOSCI.map(t => `<option value="${t.id}" ${t.id === stan.trudnosc ? 'selected' : ''} ${dostepne.has(t.id) ? '' : 'disabled'}>${t.nazwa}</option>`).join('')}
+    </select></label>`;
+}
+
+function ustawieniaStolu() {
+  const wLosowaniu = faza === 'rozdawanie' || faza === 'odkrywanie';
+  return `${stan.etap !== 'mecz' && !wLosowaniu ? wyborTrudnosciRundy() : ''}
+    ${S.swobodny(stan) ? '' : '<button class="btn btn-cichy" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>'}
+    <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Wróć do ustawień</button>`;
+}
+
 function aktualizujStol() {
   motyw();
   const rama = $('.rama');
   if (!rama) return;
   rama.dataset.faza = faza;
   $('#akcje').innerHTML = akcjeStolu();
+  $('#stol-ustawienia').innerHTML = ustawieniaStolu();
   $('#stolStatus').textContent = statusStolu();
   const odkryta = faza === 'odkryta';
   const k = $('.karta');
@@ -350,6 +383,7 @@ function widokBrak() {
     <p>W tej konfiguracji nie została żadna nowa karta. Wszystkie pasujące karty były już w tej serii pokazane, wymienione albo unieważnione.</p>
     <p>${rozegr ? `Rozegraliście ${rozegr} ${rozegr === 1 ? 'rundę' : 'rundy'}. Wyniki zostają.` : 'Nie ma jeszcze rozegranych rund.'}</p>
     <div class="akcje">
+      ${wyborTrudnosciRundy()}
       <button class="btn btn-glowny" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>
       <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Wróć do ustawień</button>
     </div>
@@ -385,7 +419,7 @@ function widokFinal() {
       <caption>Rundy. Dotknij wyniku, żeby go poprawić.</caption>
       <thead><tr><th scope="col">Misja</th>${[0, 1].map(i => `<th scope="col">${esc(stan.gracze[i])}</th>`).join('')}</tr></thead>
       <tbody>${rundy.map((r, n) => `<tr class="wiersz">
-        <th scope="row"><span class="nr">${n + 1}</span>${esc(misja(r.karta).tytul)}</th>
+        <th scope="row"><span class="nr">${n + 1}</span>${esc(misja(r.karta).tytul)}<small>${trudnosc(misja(r.karta).trudnosc).nazwa}</small></th>
         ${[0, 1].map(i => komorka(r, n, i)).join('')}
       </tr>`).join('')}</tbody>
     </table>` : ''}
@@ -422,7 +456,7 @@ function aktualizujFinal() {
 // ---------------------------------------------------------
 // Po narysowaniu: animacje wejścia i sekwencje
 // ---------------------------------------------------------
-function podlacz(stary) {
+function podlacz(stary, losujPoWymianie) {
   const w = widok(stan);
   if (w === 'start') {
     if (stary) fx.wejscie($$('.widok-start > *'), 35);
@@ -431,7 +465,7 @@ function podlacz(stary) {
   if (w === 'stol') {
     aktualizujStol();
     if (!stary) return;
-    if (stan.etap === 'odkrycie' && ['wymien', 'uniewaznij'].includes(ostatniaAkcja)) { losuj(); return; }
+    if (stan.etap === 'odkrycie' && losujPoWymianie) { losuj(); return; }
     fx.wejscie([$('.stol-naglowek'), $('.rama'), $('#akcje')], 50);
     return;
   }
@@ -442,7 +476,9 @@ function podlacz(stary) {
     if (stary && S.rozegrane(stan).length) {
       const kol = z === null ? ['#ff7a45', '#36d0ff', '#ffcf3a', '#eef1e6'] : [z ? '#36d0ff' : '#ff7a45', '#ffcf3a', '#eef1e6'];
       const zr = z === null ? [[.25, .42], [.75, .42]] : [[z ? .72 : .28, .4]];
-      setTimeout(() => fx.konfetti(kol, zr), fx.reduced ? 0 : 420);
+      setTimeout(() => {
+        if (stan.etap === 'final' && document.body.dataset.dzial === 'wyzwania') fx.konfetti(kol, zr);
+      }, fx.reduced ? 0 : 420);
     }
     oglos(`${tytulFinalu()} ${stan.gracze[0]} ${p[0]} punktów, ${stan.gracze[1]} ${p[1]} punktów.`);
     return;
@@ -476,7 +512,7 @@ async function odkryjTeraz() {
   faza = 'odkryta';
   await anim;
   if (stan !== nowy) return;
-  motyw(); renderHud(); aktualizujStol();
+  motyw(); renderHud(); aktualizujStol(); aktualizujPortal(stan);
   const m = misja(S.runda(stan).karta);
   oglos(`Misja ${m.tytul}. ${m.cel} Od kiedy: ${m.odKiedy} Zaliczasz, gdy: ${m.zaliczenie}`);
   $('#kartaTytul')?.setAttribute('tabindex', '-1');
@@ -505,13 +541,36 @@ function potwierdz(btn, tekst) {
   return false;
 }
 
-document.addEventListener('click', async e => {
+function potwierdzZakonczenie(akcja) {
+  const d = $('#potwierdz-serie');
+  const ustawienia = akcja === 'konfiguracja';
+  $('#potwierdz-tytul').textContent = ustawienia ? 'Wrócić do ustawień?' : 'Zakończyć serię?';
+  $('p', d).textContent = ustawienia
+    ? 'Po powrocie do ustawień bieżąca karta i wynik tej gry zostaną wyczyszczone.'
+    : 'Podsumowanie zachowa ukończone rundy. Bieżąca runda zostanie zamknięta.';
+  $('button[value="reset"]', d).textContent = ustawienia ? 'Wróć do ustawień' : 'Zakończ serię';
+  d.returnValue = '';
+  d.addEventListener('close', () => {
+    if (d.returnValue !== 'reset') return;
+    faza = 'talia';
+    ustaw(ustawienia ? S.doKonfiguracji(stan) : S.zakonczWczesniej(stan));
+  }, { once: true });
+  d.showModal();
+}
+
+document.addEventListener('click', e => {
   const b = e.target.closest('[data-akcja]');
-  if (!b || b.disabled) return;
+  if (!b || b.disabled || b.closest('[inert]')) return;
   const a = b.dataset.akcja;
   ostatniaAkcja = a;
   switch (a) {
-    case 'rozpocznij': faza = 'talia'; ustaw(S.rozpocznij(stan)); break;
+    case 'rozpocznij': faza = 'talia'; ustaw(S.rozpocznij(stan, 'seria')); break;
+    case 'rozpocznij-swobodnie':
+    case 'graj-od-razu': {
+      faza = 'talia';
+      if (ustaw(S.rozpocznij(stan, 'swobodny')) && a === 'graj-od-razu') przejdzDo('wyzwania');
+      break;
+    }
     case 'rewanz': faza = 'talia'; ustaw(S.rewanz(stan)); break;
     case 'losuj': losuj(); break;
     case 'odkryj': if (faza === 'zakryta' || faza === 'talia') odkryjTeraz(); break;
@@ -522,18 +581,20 @@ document.addEventListener('click', async e => {
     case 'wymien': {
       const n = S.wymien(stan);
       if (n === stan) break;
-      await fx.odrzuc($('#kartaWrap'), -1);
       faza = 'talia'; ustaw(n);
-      pokazKomunikat('Karta wymieniona. Wymiana na tę serię jest zużyta.', 3200);
+      if (!S.swobodny(stan)) pokazKomunikat('Karta wymieniona. Wymiana na tę serię jest zużyta.', 3200);
+      break;
+    }
+    case 'kolejna-swobodna': {
+      faza = 'talia'; ustaw(S.kolejnaSwobodna(stan));
       break;
     }
     case 'uniewaznij': {
       if (!potwierdz(b, 'Na pewno? Dotknij jeszcze raz')) break;
       const n = S.uniewaznij(stan);
       if (n === stan) break;
-      if (STOL.includes(stan.etap)) await fx.odrzuc($('#kartaWrap'), 1);
       faza = 'talia'; ustaw(n);
-      if (n.etap !== 'brak') pokazKomunikat('Karta unieważniona bez punktu. Wymiana nadal czeka.', 3200);
+      if (n.etap !== 'brak') pokazKomunikat('Karta unieważniona bez punktu i bez zużycia wymiany.', 3200);
       break;
     }
     case 'wynik': ustaw(S.ustawWynik(stan, +b.dataset.g, +b.dataset.w)); break;
@@ -547,8 +608,12 @@ document.addEventListener('click', async e => {
       }
       break;
     }
-    case 'zakoncz': ustaw(S.zakonczWczesniej(stan)); break;
-    case 'konfiguracja': ustaw(S.doKonfiguracji(stan)); break;
+    case 'zakoncz': {
+      if (stan.etap === 'brak') ustaw(S.zakonczWczesniej(stan));
+      else potwierdzZakonczenie(a);
+      break;
+    }
+    case 'konfiguracja': potwierdzZakonczenie(a); break;
     case 'awatar': {
       const av = b.querySelector('.awatar');
       av.classList.remove('blysk-teraz'); void av.getBoundingClientRect(); av.classList.add('blysk-teraz');
@@ -563,6 +628,14 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.name === 'tryb') ustaw(S.ustawTryb(stan, t.value));
   if (t.name === 'trud') ustaw(S.ustawTrudnosc(stan, t.value));
+  if (t.name === 'trud-rundy') {
+    const nowy = S.zmienTrudnosc(stan, t.value);
+    if (nowy === stan) return;
+    ostatniaAkcja = null;
+    faza = 'talia';
+    ustaw(nowy);
+    oglos(`Trudność następnej karty: ${trudnosc(nowy.trudnosc).nazwa}.`);
+  }
 });
 
 let tAv;
@@ -610,6 +683,8 @@ function otworzInfo() {
           <li>Po trzech rundach jest finał i rewanż.</li>
         </ol>
         <p><b>Wymiana.</b> Jedna wspólna na serię, przed rozpoczęciem rundy. Wymieniona karta nie wraca w tej serii.</p>
+        <p><b>Swobodne losowanie.</b> Zmieniaj trudność i losuj kolejne karty bez limitu. Ten tryb jest bez punktów.</p>
+        <p><b>Trudność w serii.</b> Można ją zmienić przed meczem. Każde zaliczenie nadal daje 1 punkt.</p>
         <p><b>Karta niewykonalna.</b> Unieważniacie ją bez punktu i bez zużycia wymiany. Dostajecie nową kartę.</p>
         <h3>Co dokładnie się liczy</h3>
         <ul class="slownik">${Object.values(SLOWNIK).map(t => `<li>${esc(t)}</li>`).join('')}</ul>
@@ -661,16 +736,11 @@ fx.reakcjaDotyku(document);
 fx.paralaksa();
 document.addEventListener('visibilitychange', () => document.documentElement.classList.toggle('ukryta', document.hidden));
 
-if (stan.etap === 'start') {
-  // ekran startowy jest już w HTML; tylko uzupełniamy konfigurację
-  motyw(); renderHud();
-  $('#konfiguracja').innerHTML = konfiguracja();
-  $('#notaZapisu').innerHTML = notaZapisu();
-} else {
-  ekran.innerHTML = ''; render(null);
-}
+uruchomPortal();
+render();
+fx.uruchomScene($('.portal-scena'));
 if (wczytane.uwaga === 'uszkodzony') pokazKomunikat('Zapis był uszkodzony. Zaczynacie od nowa.');
-if (wczytane.uwaga === 'starszy') pokazKomunikat('Zapis był w starszym formacie. Zostały ustawienia graczy.');
+if (wczytane.uwaga === 'starszy') pokazKomunikat('Wczytano zapis ze starszej wersji.');
 if (wczytane.uwaga === 'nowszy') pokazKomunikat('Zapis pochodzi z nowszej wersji strony. Nie nadpisujemy go, ta sesja nie będzie zapisana.');
 if (wczytane.uwaga === 'brak-pamieci') pokazKomunikat(tekstBrakuZapisu, 8000);
 

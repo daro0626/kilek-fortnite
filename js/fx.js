@@ -112,6 +112,31 @@ export function paralaksa() {
   }, { passive: true });
 }
 
+export function uruchomScene(scena) {
+  let klatka;
+  scena.addEventListener('pointermove', e => {
+    if (reduced || e.pointerType === 'touch') return;
+    const prostokat = scena.getBoundingClientRect();
+    const x = (e.clientX - prostokat.left) / prostokat.width - .5;
+    const y = (e.clientY - prostokat.top) / prostokat.height - .5;
+    cancelAnimationFrame(klatka);
+    klatka = requestAnimationFrame(() => {
+      scena.style.setProperty('--scena-x', `${-y * 19}deg`);
+      scena.style.setProperty('--scena-y', `${x * 23}deg`);
+    });
+  });
+  scena.addEventListener('pointerleave', () => {
+    cancelAnimationFrame(klatka);
+    scena.style.removeProperty('--scena-x');
+    scena.style.removeProperty('--scena-y');
+  });
+  scena.addEventListener('pointerdown', e => {
+    if (!reduced && e.pointerType === 'touch') {
+      scena.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 280, easing: EASE_OUT });
+    }
+  });
+}
+
 // Zmiana koloru mapy jest jednorazowa (jedno przemalowanie), a przejście
 // maskuje krótki „mrug” warstwy, który działa tylko na kompozytorze.
 export function przebarwMape() {
@@ -147,7 +172,7 @@ export function reakcjaDotyku(root) {
 }
 
 // ---------------------------------------------------------
-// Losowanie: talia tasuje się, jeden rewers ląduje w ramce (do ok. 650 ms).
+// Losowanie: szybki obrót rewersów i dłuższe wyhamowanie wybranej karty.
 // ---------------------------------------------------------
 export async function rozdaj(talia, karta) {
   if (reduced) return;
@@ -156,23 +181,24 @@ export async function rozdaj(talia, karta) {
   const dy = (tr.top + tr.height / 2) - (kr.top + kr.height / 2);
   const rewersy = [...talia.querySelectorAll('.talia-rewers')];
   // talia reaguje od razu
-  anim(talia, [{ transform: 'scale(1)' }, { transform: 'scale(.94)' }, { transform: 'scale(1)' }], { duration: 160, easing: EASE_OUT });
+  anim(talia, [{ scale: 1 }, { scale: .94 }, { scale: 1 }], { duration: 160, easing: EASE_OUT });
   rewersy.forEach((r, i) => {
     const s = i % 2 ? 1 : -1, o = 26 + i * 12;
     anim(r, [
       { transform: r.style.transform || 'none' },
-      { transform: `translate(${s * o}px, ${-6 - i * 3}px) rotate(${s * (6 + i * 3)}deg)`, offset: .45 },
-      { transform: `translate(${-s * o * .6}px, ${-2}px) rotate(${-s * 4}deg)`, offset: .75 },
+      { transform: `translate(${s * o}px, ${-12 - i * 4}px) rotate(${s * (18 + i * 4)}deg)`, offset: .34 },
+      { transform: `translate(${-s * o * .85}px, 8px) rotate(${-s * 18}deg)`, offset: .62 },
       { transform: r.style.transform || 'none' },
-    ], { duration: 520, easing: 'ease-in-out' });
+    ], { duration: 520 + i * 36, easing: 'ease-in-out' });
   });
   pingMapy();
   const lot = anim(karta, [
     { transform: `translate(${dx}px, ${dy}px) scale(.42) rotate(-14deg)`, opacity: .0 },
-    { transform: `translate(${dx * .5}px, ${dy * .55 - 40}px) scale(.72) rotate(7deg)`, opacity: 1, offset: .45 },
+    { transform: `translate(${dx}px, ${dy}px) scale(.44) rotate(-22deg)`, opacity: .1, offset: .20 },
+    { transform: `translate(${dx * .5}px, ${dy * .55 - 40}px) scale(.72) rotate(10deg)`, opacity: 1, offset: .49 },
     { transform: 'translate(0, -6px) scale(1.035) rotate(-1.2deg)', opacity: 1, offset: .82 },
     { transform: 'none', opacity: 1 },
-  ], { duration: 640, easing: EASE_OUT, delay: 0 });
+  ], { duration: 760, easing: 'cubic-bezier(.23,.58,.27,1)' });
   await czekaj(lot);
   const rama = karta.closest('.rama');
   rama?.classList.add('zamkniete');
