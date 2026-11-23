@@ -26,7 +26,8 @@ let mapaGotowa = false;
 // Warstwice rysuje wątek roboczy (OffscreenCanvas), żeby nie blokować dotyku.
 // Bez OffscreenCanvas rysujemy w wolnej chwili na głównym wątku.
 function obrazMapy(w, h) {
-  const dpr = Math.min(devicePixelRatio || 1, 1.5, Math.sqrt(3.2e6 / (w * h)));
+  const limitDpr = matchMedia('(pointer: coarse)').matches ? .85 : 1.5;
+  const dpr = Math.min(devicePixelRatio || 1, limitDpr, Math.sqrt(3.2e6 / (w * h)));
   if ('OffscreenCanvas' in window && 'Worker' in window) {
     return new Promise(ok => {
       let wk;
@@ -57,6 +58,16 @@ export async function zbudujMape() {
   const blob = await obrazMapy(w, h);
   if (!blob) return;
   const url = URL.createObjectURL(blob);
+  const zlozMape = () => {
+    kafle.style.setProperty('--maska-mapy', `url(${url})`);
+    kafle.classList.add('zlozona');
+    kafle.replaceChildren();
+  };
+  pingMapy();
+  if (reduced || sessionStorageBezpieczny('kc:fortnite:intro')) {
+    zlozMape();
+    return;
+  }
   const K = 3, W = 4; // 3 kolumny × 4 rzędy fragmentów
   const fr = document.createDocumentFragment();
   const kafel = [];
@@ -73,17 +84,16 @@ export async function zbudujMape() {
     fr.appendChild(d); kafel.push([d, k, r]);
   }
   kafle.appendChild(fr);
-  plan.classList.add('gotowa');
-  pingMapy();
-  if (reduced || sessionStorageBezpieczny('kc:fortnite:intro')) return;
   // Fragmenty mapy układają się wokół tytułu w ok. 350 ms.
-  kafel.forEach(([d, k, r], i) => {
+  const wejscia = kafel.map(([d, k, r], i) => {
     const dx = (k - 1) * 60, dy = (r - 1.5) * 50;
-    d.animate([
+    return d.animate([
       { transform: `translate3d(${dx}px, ${dy}px, 0) rotate(${(i % 2 ? 1 : -1) * 6}deg) scale(.9)`, opacity: 0 },
       { transform: 'none', opacity: 1 },
-    ], { duration: 300, delay: (i % 6) * 10, easing: EASE_OUT, fill: 'backwards' });
+    ], { duration: 300, delay: (i % 6) * 10, easing: EASE_OUT, fill: 'backwards' }).finished;
   });
+  await Promise.allSettled(wejscia);
+  zlozMape();
 }
 function sessionStorageBezpieczny(k) {
   try { if (sessionStorage.getItem(k)) return true; sessionStorage.setItem(k, '1'); } catch { /* bez pamięci sesji */ }

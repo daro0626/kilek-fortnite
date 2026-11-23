@@ -66,6 +66,7 @@ svg{display:block}
 }
 .mapa-warstwice{display:none}
 .mapa-kafle{position:absolute;inset:0}
+.mapa-kafle.zlozona{background-color:rgba(var(--acc-rgb),.30);mask:var(--maska-mapy) center/100% 100% no-repeat}
 .kafel{position:absolute;background-color:rgba(var(--acc-rgb),.30);
   -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
 body[data-etap=odkrycie] .mapa-plan{transform:translate3d(-50%,-42%,0) rotateX(50deg) rotateZ(-4deg) scale(1.18)}
@@ -104,7 +105,9 @@ body:is([data-etap=rozliczenie],[data-etap=final],[data-etap=karta],[data-etap=m
 .mapa-lampa{position:absolute;left:50%;top:-20vh;width:140vmin;height:110vh;margin-left:-70vmin;
   background:radial-gradient(closest-side,rgba(var(--acc-rgb),.16),transparent 70%);opacity:.9;transition:opacity .4s ease}
 
-html.ukryta .mapa-skaner,html.ukryta .mapa-burza{animation-play-state:paused!important}
+html.ukryta .mapa-skaner,html.ukryta .mapa-burza,
+html.ukryta .rama[data-faza=zakryta] .rewers::before,
+html.ukryta .rama[data-faza=zakryta] .rewers-wzor::after{animation-play-state:paused!important}
 
 /* ---------------------------------------------------------
    UKŁAD
