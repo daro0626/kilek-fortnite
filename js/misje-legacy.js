@@ -1,4 +1,4 @@
-// Zachowane warunki pięciu kart zmienionych po Etapie A.
+// Zachowane opisy kart zmienionych po Etapie A.
 export const LEGACY_OPISY = {
   "E01": {
     "cel": "Wygraj mecz bez leczenia zdrowia.",
@@ -19,5 +19,11 @@ export const LEGACY_OPISY = {
   "E05": {
     "cel": "Zajmij 3. miejsce albo wyższe bez budowania.",
     "zaliczenie": "Miejsce 1–3 i ani jednej postawionej konstrukcji."
+  },
+  "E06": {
+    "cel": "Zdobądź 3 eliminacje i wejdź do TOP 10 bez strzelby.",
+    "zaliczenie": "Co najmniej 3 eliminacje, miejsce 1–10 i zero strzałów ze strzelby.",
+    "doprecyzowanie": ["strzelba", "miejsce"],
+    "wskazowka": "Dobierz wyposażenie na więcej niż jedną odległość."
   }
 };
