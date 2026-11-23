@@ -47,7 +47,16 @@ test('każda karta ma pełne i poprawne dane', () => {
     m.doprecyzowanie.forEach(d => assert.ok(SLOWNIK[d], m.id + ' ' + d));
     assert.equal(m.id[0], { latwy: 'L', normalny: 'N', trudny: 'T', ekspert: 'X', ekstremalny: 'E' }[m.trudnosc]);
   }
-  assert.ok(MISJE.length >= 18 && MISJE.length <= 26, 'około 20 misji');
+  assert.ok(MISJE.length >= 28, 'zachowana dotychczasowa pula i cztery nowe misje');
+});
+
+test('rodzina bez strzelby ma cztery progi w Build i Zero Build', () => {
+  const rodzina = ['N06', 'T06', 'X06', 'E06'];
+  for (const tryb of Object.keys(TRYBY)) for (const [index, id] of rodzina.entries()) {
+    const m = pula(tryb, TRUDNOSCI[index + 1].id).find(k => k.id === id);
+    assert.ok(m?.doprecyzowanie.includes('strzelba'), `${tryb}/${id}`);
+  }
+  assert.equal(S.misja('E06').tytul, 'Wygraj bez strzelby');
 });
 
 test('każda konfiguracja ma co najmniej 4 zgodne karty', () => {
@@ -108,13 +117,9 @@ test('unieważnienie: bez punktu, bez zużycia wymiany, nowa karta', () => {
 });
 
 test('brak kolejnej karty: można zakończyć serię bez utraty wyników', () => {
-  // build/ekspert ma dokładnie 4 karty
-  assert.equal(pula('build', 'ekspert').length, 4);
-  let s = start('build', 'ekspert');
-  s = rozegrajRunde(s, 1, 0);           // karta 1
-  s = S.uniewaznij(S.odkryj(s));         // karta 2 unieważniona -> karta 3
-  s = S.uniewaznij(S.odkryj(s));         // karta 3 unieważniona -> karta 4
-  s = S.uniewaznij(S.odkryj(s));         // karta 4 unieważniona -> brak
+  const ile = pula('zero', 'latwy').length;
+  let s = rozegrajRunde(start('zero', 'latwy'), 1, 0);
+  for (let i = 1; i < ile; i++) s = S.uniewaznij(S.odkryj(s));
   assert.equal(s.etap, 'brak');
   assert.equal(S.mozeWymienic(s), false);
   s = S.zakonczWczesniej(s);
@@ -122,6 +127,52 @@ test('brak kolejnej karty: można zakończyć serię bez utraty wyników', () =>
   assert.equal(s.seria.koniec, 'wczesniej');
   assert.deepEqual(S.punkty(s), [1, 0]);
   assert.equal(S.zwyciezca(s), 0);
+});
+
+test('zmiana trudności między rundami zachowuje poprzednią kartę i punktację', () => {
+  let s = rozegrajRunde(start('zero', 'latwy'), 1, 0);
+  const pierwsza = S.rozegrane(s)[0].karta;
+  const poprzednia = S.runda(s).karta;
+  s = S.zmienTrudnosc(s, 'ekstremalny');
+  assert.equal(S.numerRundy(s), 2);
+  assert.equal(S.rozegrane(s)[0].karta, pierwsza);
+  assert.ok(s.seria.pokazane.includes(poprzednia));
+  assert.equal(S.misja(S.runda(s).karta).trudnosc, 'ekstremalny');
+  assert.deepEqual(S.punkty(s), [1, 0]);
+  assert.ok(S.poprawny(s));
+  s = S.graj(S.odkryj(s));
+  assert.equal(S.zmienTrudnosc(s, 'normalny'), s);
+});
+
+test('losowanie swobodne krąży po całej puli bez bezpośrednich powtórek', () => {
+  let s = S.rozpocznij(S.ustawTryb(S.nowyStan(), 'zero'), 'swobodny');
+  const karty = [S.runda(s).karta];
+  for (let i = 0; i < 24; i++) {
+    s = S.wymien(S.odkryj(s));
+    const id = S.runda(s).karta;
+    assert.notEqual(id, karty.at(-1));
+    assert.ok(S.poprawny(s));
+    assert.equal(s.seria.rundy.length, 1);
+    karty.push(id);
+  }
+  const rozmiar = pula('zero', 'latwy').length;
+  assert.equal(new Set(karty.slice(0, rozmiar)).size, rozmiar);
+  assert.equal(s.seria.pokazane.length, rozmiar);
+  assert.deepEqual(S.punkty(s), [0, 0]);
+  s = S.graj(S.odkryj(s));
+  assert.equal(S.kolejnaSwobodna(s).etap, 'odkrycie');
+});
+
+test('zapis v1 zachowuje pseudonimy, rozegrane rundy i bieżącą kartę', () => {
+  const s = rozegrajRunde(start(), 1, 0);
+  const v1 = { ...s, v: 1 };
+  delete v1.sposob;
+  localStorage.setItem(Z.KLUCZ, JSON.stringify(v1));
+  const wynik = Z.wczytaj();
+  assert.equal(wynik.uwaga, 'starszy');
+  assert.deepEqual(wynik.stan, s);
+  assert.deepEqual(S.punkty(wynik.stan), [1, 0]);
+  assert.equal(JSON.parse(localStorage.getItem(Z.KLUCZ)).v, 1);
 });
 
 test('pusta pula: konfiguracja bez kart nie startuje', () => {

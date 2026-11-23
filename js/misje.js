@@ -29,6 +29,7 @@ export const SLOWNIK = {
   skrzynia: 'Otwarcie skrzyni = przytrzymanie przycisku interakcji przy skrzyni do końca. Łup z ziemi, z pokonanych i z innych pojemników jest dozwolony.',
   miejsce: 'Miejsce odczytujesz z ekranu końca meczu. W trybie drużynowym liczy się miejsce drużyny.',
   bron: 'Broń startowa, którą gra daje wszystkim na początku, nie liczy się jako podniesiona.',
+  strzelba: '„Pompa” to potocznie strzelba typu pump. W tych misjach zakaz obejmuje strzał z dowolnej strzelby, nawet jeśli spudłujesz. Podniesienie, noszenie i oddanie jej są dozwolone.',
 };
 
 const S = '2026-11-23';
@@ -98,6 +99,12 @@ export const MISJE = [
     zaliczenie: 'W chwili eliminacji stoisz na konstrukcji, którą sam postawiłeś.',
     doprecyzowanie: [], wskazowka: 'Dwie rampy i podłoga wystarczą, żeby patrzeć z góry.',
     zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
+  { id: 'N06', trudnosc: 'normalny', tryby: ['build', 'zero'], tytul: 'Bez pompy',
+    cel: 'Dokończ mecz bez strzału z jakiejkolwiek strzelby.',
+    odKiedy: 'Od początku do końca meczu.',
+    zaliczenie: 'Mecz kończy się eliminacją albo zwycięstwem i masz zero strzałów ze strzelby.',
+    doprecyzowanie: ['strzelba'], wskazowka: 'Zdecyduj przed lądowaniem, czym wypełnisz wolne miejsce w ekwipunku.',
+    zrodla: ['epic-strzelby', 'epic-br'], sprawdzono: S },
 
   // ---------------- TRUDNY ----------------
   { id: 'T01', trudnosc: 'trudny', tryby: ['build', 'zero'], tytul: 'Twarda skóra',
@@ -130,6 +137,12 @@ export const MISJE = [
     zaliczenie: '2 eliminacje, miejsce 1–20 i ani jednej postawionej konstrukcji.',
     doprecyzowanie: ['miejsce'], wskazowka: 'Zbieranie materiałów jest dozwolone. Budowanie nie.',
     zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
+  { id: 'T06', trudnosc: 'trudny', tryby: ['build', 'zero'], tytul: 'Bez strzelby',
+    cel: 'Wejdź do TOP 10 bez strzelania ze strzelby.',
+    odKiedy: 'Od początku do końca meczu.',
+    zaliczenie: 'Miejsce 1–10 i zero strzałów ze strzelby.',
+    doprecyzowanie: ['strzelba', 'miejsce'], wskazowka: 'Wybierz trasę z osłonami, żeby móc samodzielnie decydować o dystansie w grze.',
+    zrodla: ['epic-strzelby', 'epic-br'], sprawdzono: S },
 
   // ---------------- EKSPERT ----------------
   { id: 'X01', trudnosc: 'ekspert', tryby: ['build', 'zero'], tytul: 'Cień',
@@ -162,6 +175,12 @@ export const MISJE = [
     zaliczenie: '3 eliminacje, miejsce 1–15 i ani jednej użytej tarczy.',
     doprecyzowanie: ['tarcza', 'miejsce'], wskazowka: 'Samoczynna nadtarcza Zero Build działa. Daj jej czas po walce.',
     zrodla: BR, sprawdzono: S },
+  { id: 'X06', trudnosc: 'ekspert', tryby: ['build', 'zero'], tytul: 'Bez strzelby, z eliminacjami',
+    cel: 'Zdobądź 3 eliminacje i wejdź do TOP 10 bez strzelby.',
+    odKiedy: 'Od początku do końca meczu.',
+    zaliczenie: 'Co najmniej 3 eliminacje, miejsce 1–10 i zero strzałów ze strzelby.',
+    doprecyzowanie: ['strzelba', 'miejsce'], wskazowka: 'Dobierz wyposażenie na więcej niż jedną odległość.',
+    zrodla: ['epic-strzelby', 'epic-br'], sprawdzono: S },
 
   // ---------------- EKSTREMALNY ----------------
   { id: 'E01', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Korona bez apteczki',
@@ -194,6 +213,12 @@ export const MISJE = [
     zaliczenie: 'Miejsce 1–3 i ani jednej postawionej konstrukcji.',
     doprecyzowanie: ['miejsce'], wskazowka: 'Inni budują. Ty szukasz naturalnych osłon i flanek.',
     zrodla: ['epic-zbieranie', 'epic-br'], sprawdzono: S },
+  { id: 'E06', trudnosc: 'ekstremalny', tryby: ['build', 'zero'], tytul: 'Wygraj bez strzelby',
+    cel: 'Zdobądź Victory Royale bez strzału ze strzelby.',
+    odKiedy: 'Od początku do końca meczu.',
+    zaliczenie: 'Victory Royale i zero strzałów z jakiejkolwiek strzelby.',
+    doprecyzowanie: ['strzelba'], wskazowka: 'Ułóż ekwipunek z myślą o końcówce, zanim strefa zmusi cię do zmiany pozycji.',
+    zrodla: ['epic-strzelby', 'epic-br'], sprawdzono: S },
 ];
 
 export const MIN_KART = 4; // trzy rundy + jedna wymiana

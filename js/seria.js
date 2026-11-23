@@ -5,8 +5,9 @@
 // =========================================================
 import { MISJE, TRYBY, TRUDNOSCI, pula, dostepna, misja } from './misje.js';
 
-export const WERSJA = 1;
+export const WERSJA = 2;
 export const RUNDY = 3;
+export const TRYBY_ZABAWY = ['seria', 'swobodny'];
 export const ETAPY = ['start', 'odkrycie', 'karta', 'mecz', 'rozliczenie', 'brak', 'final'];
 
 const kopia = s => JSON.parse(JSON.stringify(s));
@@ -18,6 +19,7 @@ export function nowyStan() {
     gracze: ['Gracz 1', 'Gracz 2'],
     tryb: 'build',
     trudnosc: 'latwy',
+    sposob: 'seria',
     seria: null,
     ostatnia: null, // ID ostatniej rozegranej karty (dla rewanżu)
   };
@@ -38,6 +40,7 @@ export const ustawLosowanie = f => { rng = f; };
 
 export const runda = s => s.seria?.rundy[s.seria.rundy.length - 1] || null;
 export const numerRundy = s => s.seria ? s.seria.rundy.filter(r => !r.uniewazniona).length : 0;
+export const swobodny = s => s.sposob === 'swobodny';
 
 // Karty jeszcze niepokazane w tej serii.
 export function wolne(s, bez = null) {
@@ -48,8 +51,18 @@ export function wolne(s, bez = null) {
 function losujKarte(s, unikaj = null) {
   let kandydaci = wolne(s, unikaj);
   if (!kandydaci.length) kandydaci = wolne(s);
-  if (!kandydaci.length) return null;
+  if (!kandydaci.length) {
+    if (!swobodny(s)) return null;
+    const zgodne = new Set(pula(s.tryb, s.trudnosc).map(m => m.id));
+    return s.seria.pokazane.find(id => zgodne.has(id) && id !== unikaj) ?? null;
+  }
   return kandydaci[Math.floor(rng() * kandydaci.length)].id;
+}
+
+function zapiszKarte(s, id) {
+  if (swobodny(s)) s.seria.pokazane = s.seria.pokazane.filter(karta => karta !== id);
+  s.seria.pokazane.push(id);
+  return { karta: id, wyniki: [null, null], odkryta: false };
 }
 
 // ---------- konfiguracja ----------
@@ -76,10 +89,11 @@ export const nazwaGracza = (s, i) => (s.gracze[i] || '').trim() || `Gracz ${i + 
 
 // ---------- seria ----------
 // Start serii i losowanie pierwszej karty. Karta jest zapisana PRZED animacją.
-export function rozpocznij(s) {
+export function rozpocznij(s, sposob = s.sposob) {
   if (s.etap !== 'start' && s.etap !== 'final') return s;
-  if (!dostepna(s.tryb, s.trudnosc)) return s;
+  if (!dostepna(s.tryb, s.trudnosc) || !TRYBY_ZABAWY.includes(sposob)) return s;
   const n = kopia(s);
+  n.sposob = sposob;
   n.gracze = n.gracze.map((_, i) => nazwaGracza(n, i));
   n.seria = nowaSeria();
   return dobierz(n, s.etap === 'final' ? s.ostatnia : null);
@@ -90,8 +104,7 @@ export const rewanz = s => (s.etap === 'final' ? rozpocznij(s) : s);
 function dobierz(n, unikaj = null) {
   const id = losujKarte(n, unikaj);
   if (!id) { n.etap = 'brak'; return n; }
-  n.seria.pokazane.push(id);
-  n.seria.rundy.push({ karta: id, wyniki: [null, null], odkryta: false });
+  n.seria.rundy.push(zapiszKarte(n, id));
   n.etap = 'odkrycie';
   return n;
 }
@@ -101,20 +114,46 @@ export function odkryj(s) {
   const n = kopia(s); runda(n).odkryta = true; n.etap = 'karta'; return n;
 }
 
-export const mozeWymienic = s => (s.etap === 'karta' || s.etap === 'odkrycie') && !s.seria.wymiana && wolne(s).length > 0;
+export const mozeWymienic = s => (s.etap === 'karta' || s.etap === 'odkrycie') &&
+  (swobodny(s) || (!s.seria.wymiana && wolne(s).length > 0));
 
 // Jedna wspólna wymiana na serię, przed rozpoczęciem rundy. Karta wypada z puli serii.
 export function wymien(s) {
   if (!mozeWymienic(s)) return s;
+  if (swobodny(s)) return kolejnaSwobodna(s);
   const n = kopia(s);
   const r = runda(n);
   const id = losujKarte(n);
   n.seria.wymiana = true;
   n.seria.wymieniona = r.karta;
-  n.seria.pokazane.push(id);
-  r.karta = id; r.odkryta = false;
+  n.seria.rundy[n.seria.rundy.length - 1] = zapiszKarte(n, id);
   n.etap = 'odkrycie';
   return n;
+}
+
+export function kolejnaSwobodna(s) {
+  if (!swobodny(s) || !['odkrycie', 'karta', 'mecz'].includes(s.etap)) return s;
+  const n = kopia(s);
+  const id = losujKarte(n, runda(s).karta);
+  if (!id) return s;
+  n.seria.rundy = [zapiszKarte(n, id)];
+  n.etap = 'odkrycie';
+  return n;
+}
+
+export function dostepneTrudnosci(s) {
+  return TRUDNOSCI.filter(t => dostepna(s.tryb, t.id) &&
+    (swobodny(s) || pula(s.tryb, t.id).some(m => !s.seria.pokazane.includes(m.id))));
+}
+
+// Zmiana przed meczem dotyczy bieżącej, nierozliczonej rundy.
+export function zmienTrudnosc(s, trud) {
+  if (!['odkrycie', 'karta', 'brak'].includes(s.etap) || s.trudnosc === trud ||
+      !dostepneTrudnosci(s).some(t => t.id === trud)) return s;
+  const n = kopia(s);
+  n.trudnosc = trud;
+  if (n.etap !== 'brak') n.seria.rundy.pop();
+  return dobierz(n);
 }
 
 export function graj(s) {
@@ -135,6 +174,7 @@ export function wrocDoKarty(s) {
 // Niewykonalna karta: bez punktu, bez zużycia wymiany. Jeśli są karty, losujemy nową.
 export function uniewaznij(s) {
   if (!['karta', 'mecz', 'rozliczenie'].includes(s.etap)) return s;
+  if (swobodny(s)) return kolejnaSwobodna(s);
   const n = kopia(s);
   const r = runda(n);
   r.uniewazniona = true; r.wyniki = [null, null];
@@ -204,11 +244,11 @@ export function poprawny(s) {
   try {
     if (!s || s.v !== WERSJA || !ETAPY.includes(s.etap)) return false;
     if (!Array.isArray(s.gracze) || s.gracze.length !== 2 || s.gracze.some(g => typeof g !== 'string')) return false;
-    if (!TRYBY[s.tryb] || !TRUDNOSCI.some(t => t.id === s.trudnosc)) return false;
+    if (!TRYBY[s.tryb] || !TRUDNOSCI.some(t => t.id === s.trudnosc) || !TRYBY_ZABAWY.includes(s.sposob)) return false;
     if (s.etap === 'start') return true;
     const se = s.seria;
     if (!se || !Array.isArray(se.rundy) || !Array.isArray(se.pokazane)) return false;
-    const ids = new Set(pula(s.tryb, s.trudnosc).map(m => m.id));
+    const ids = new Set(MISJE.filter(m => m.tryby.includes(s.tryb)).map(m => m.id));
     if (se.pokazane.some(id => !ids.has(id))) return false;
     if (new Set(se.pokazane).size !== se.pokazane.length) return false;
     for (const r of se.rundy) {
@@ -216,7 +256,9 @@ export function poprawny(s) {
       if (r.wyniki.some(w => ![0, 1, null].includes(w))) return false;
     }
     if (rozegrane(s).length > RUNDY) return false;
-    if (['odkrycie', 'karta', 'mecz', 'rozliczenie'].includes(s.etap) && (!runda(s) || runda(s).uniewazniona)) return false;
+    if (['odkrycie', 'karta', 'mecz', 'rozliczenie'].includes(s.etap) &&
+        (!runda(s) || runda(s).uniewazniona || misja(runda(s).karta).trudnosc !== s.trudnosc)) return false;
+    if (swobodny(s) && (se.rundy.length !== 1 || !['odkrycie', 'karta', 'mecz'].includes(s.etap))) return false;
     return true;
   } catch { return false; }
 }
@@ -226,6 +268,7 @@ export function poprawny(s) {
 export function migruj(stary) {
   if (!stary || typeof stary !== 'object') return null;
   if (stary.v === WERSJA) return stary;
+  if (stary.v === 1) return { ...stary, v: WERSJA, sposob: 'seria' };
   if (stary.v === undefined || stary.v === 0) {
     const n = nowyStan();
     if (Array.isArray(stary.gracze)) n.gracze = stary.gracze.slice(0, 2).map((g, i) => String(g || `Gracz ${i + 1}`).slice(0, 16));
