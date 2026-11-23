@@ -2,15 +2,16 @@
 // KILEK CHALLENGE: interfejs. Stan → widok. Logika jest w seria.js.
 // =========================================================
 import * as S from './seria.js';
-import { TRYBY, TRUDNOSCI, SLOWNIK, misja, dostepna, pula, MIN_KART, trudnosc } from './misje.js';
+import { TRYBY, TRUDNOSCI, SLOWNIK, PUNKTACJA, SKLADY, dostepna, pula, MIN_KART, trudnosc } from './misje.js';
 import { wczytaj, zapisz, wyczysc } from './zapis.js';
 import { INSYGNIA, IKONY, ODZNAKA, rewers, awatar } from './grafika.js';
 import { aktualizujPortal, przejdzDo, uruchomPortal } from './portal.js';
+import { esc, formularzOpinii, podlaczOpinie, wyczyscOpinie } from './opinie.js';
 import * as fx from './fx.js';
+import { uruchomArene } from './arena.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 const ekran = $('#ekran');
 const hud = $('#hud');
@@ -49,7 +50,7 @@ const oglos = t => { const o = $('#ogloszenie'); o.textContent = ''; requestAnim
 // ---------------------------------------------------------
 function motyw() {
   document.body.dataset.etap = stan.etap;
-  document.body.dataset.trud = stan.trudnosc;
+  document.body.dataset.trud = S.runda(stan)?.trudnosc ?? stan.trudnosc;
   document.body.dataset.faza = STOL.includes(stan.etap) ? faza : '';
 }
 
@@ -58,7 +59,7 @@ async function render(stary = null) {
   renderHud();
   aktualizujPortal(stan);
   const zmianaWidoku = !stary || widok(stary) !== widok(stan) ||
-    (STOL.includes(stan.etap) && S.runda(stary)?.karta !== S.runda(stan)?.karta);
+    (STOL.includes(stan.etap) && (S.runda(stary)?.karta !== S.runda(stan)?.karta || S.numerRundy(stary) !== S.numerRundy(stan)));
   if (!zmianaWidoku) { aktualizuj(stary); return; }
   const poprzedni = ekran.firstElementChild;
   const poprzedniaKarta = $('.karta-wrap', ekran);
@@ -100,25 +101,27 @@ function aktualizuj(stary) {
 }
 
 // ---------------- HUD ----------------
+const indeksy = () => S.duet(stan) ? [0] : [0, 1];
+const nazwaWyniku = i => S.duet(stan) ? 'Duet' : stan.gracze[i];
+const napisLimitu = s => S.limitRund(s) ? ` z ${S.limitRund(s)}` : '';
+const cenaRundy = r => `${S.wartoscRundy(r)} pkt${r?.wersjaZasad === 0 ? ' · legacy' : ''}`;
+const zaliczenia = i => S.rozegrane(stan).filter(r => r.wyniki[i] === 1).length;
+
 function renderHud() {
   const s = stan;
   hud.hidden = s.etap === 'start' || S.swobodny(s);
   if (hud.hidden) return;
+  const przed = $$('[data-suma]', hud).map(el => +el.dataset.suma);
   const p = S.punkty(s);
-  const nr = S.numerRundy(s);
-  const kropki = [0, 1, 2].map(i => {
-    const r = S.rozegrane(s).length;
-    const cls = i < r ? 'zrobiona' : (i === nr - 1 && s.etap !== 'final' ? 'biezaca' : '');
-    return `<i class="kropka ${cls}"></i>`;
-  }).join('');
-  hud.innerHTML = `
-    <div class="hud-in">
-      <div class="hud-runda" role="img" aria-label="Runda ${Math.min(nr, 3)} z 3">${kropki}</div>
-      <div class="hud-wynik" role="group" aria-label="Wynik: ${esc(s.gracze[0])} ${p[0]}, ${esc(s.gracze[1])} ${p[1]}">
-        <span class="hud-gracz p0">${awatar(s.gracze[0], 0, 'mini')}<span class="hud-nazwa">${esc(s.gracze[0])}</span><b>${p[0]}</b></span>
-        <span class="hud-gracz p1"><b>${p[1]}</b><span class="hud-nazwa">${esc(s.gracze[1])}</span>${awatar(s.gracze[1], 1, 'mini')}</span>
-      </div>
-    </div>`;
+  const nr = s.etap === 'final' ? S.rozegrane(s).length : S.numerRundy(s);
+  hud.innerHTML = `<div class="hud-in">
+    <div class="hud-etap"><b>Runda ${nr}${napisLimitu(s)}</b>
+      ${S.runda(s) && s.etap !== 'final' ? `<span>Do zdobycia ${cenaRundy(S.runda(s))}</span>` : ''}</div>
+    <div class="hud-wynik" role="group" aria-label="Punkty ${p.map((pkt, i) => `${esc(nazwaWyniku(i))} ${pkt}`).join(', ')}">
+      ${indeksy().map(i => `<span class="hud-gracz p${i}">${awatar(s.gracze[i], i, 'mini')}<span class="hud-nazwa">${esc(nazwaWyniku(i))}</span><b data-suma="${p[i]}">${p[i]}</b></span>`).join('')}
+    </div>
+  </div>`;
+  $$('[data-suma]', hud).forEach((el, i) => fx.licznik(el, przed[i] ?? p[i], p[i]));
 }
 
 // ---------------- START ----------------
@@ -129,7 +132,15 @@ function widokStart() {
     <div class="akcje-rzad wybor-zabawy">
       <button class="btn btn-glowny" type="button" data-akcja="rozpocznij-swobodnie">Losuj swobodnie</button>
       <button class="btn btn-drugi" type="button" data-akcja="rozpocznij">Rozpocznij serię</button>
+      <button class="btn btn-drugi" type="button" data-akcja="rozpocznij-duet">Wspólny duet</button>
     </div>
+    <aside class="legendarna-promo">
+      <div><strong>Wygraj bez broni</strong><p>Legendarna · 25 pkt. Jedna wspólna karta. W pojedynku 25 pkt za osobne zaliczenie każdego gracza, w duecie razem 25 pkt za spełnienie warunków przez oboje.</p></div>
+      <div class="legendarna-akcje">
+        <button class="btn btn-drugi" type="button" data-akcja="legendarna-start">Wybierz pojedynek · 25 pkt</button>
+        <button class="btn btn-drugi" type="button" data-akcja="legendarna-duet">Wybierz duet · 25 pkt</button>
+      </div>
+    </aside>
     <p class="nota-zapisu" id="notaZapisu">${notaZapisu()}</p>
   </section>`;
 }
@@ -163,27 +174,32 @@ function konfiguracja() {
         </label>`).join('')}
       </div>
     </fieldset>
+    <div class="ustaw-serie">
+      <label>Skład meczu <select name="sklad">${Object.entries(SKLADY).map(([id, nazwa]) => `<option value="${id}" ${s.sklad === id ? 'selected' : ''}>${nazwa}</option>`).join('')}</select></label>
+      <label>Liczba rund <select name="limit">${S.LIMITY_RUND.map(n => `<option value="${n}" ${s.limit === n ? 'selected' : ''}>${n || 'Bez limitu'}</option>`).join('')}</select></label>
+      <label class="opcja-serii"><input type="checkbox" name="wymianyDowolne" ${s.wymianyDowolne ? 'checked' : ''}> Dowolne wymiany w serii</label>
+    </div>
     <fieldset class="wybor-trudnosci" style="--i:${idx}">
       <legend>Trudność</legend>
       <div class="trudnosci">
         <span class="wskaznik" aria-hidden="true"></span>
         ${TRUDNOSCI.map(d => {
-          const ok = dostepna(s.tryb, d.id);
+          const ok = dostepna(s.tryb, d.id, s.sklad);
           return `<label class="trud dotyk t-${d.id}" data-t="${d.id}">
             <input type="radio" name="trud" value="${d.id}" ${s.trudnosc === d.id ? 'checked' : ''} ${ok ? '' : 'disabled'}>
-            <span class="trud-in">${INSYGNIA[d.id]}<span class="trud-nazwa">${d.nazwa}</span></span>
+            <span class="trud-in">${INSYGNIA[d.id]}<span class="trud-nazwa">${d.nazwa}</span><small>${PUNKTACJA[d.id]} pkt</small></span>
           </label>`;
         }).join('')}
       </div>
       <div class="trud-opis" id="trudOpis" aria-live="polite">${opisTrudnosci(t)}</div>
     </fieldset>
-    <p class="zasada-proby">Każdy gra swój mecz w tym samym trybie. Najlepiej Solo.</p>`;
+    <p class="zasada-proby">W pojedynku każdy osobno wykonuje tę samą misję. Wspólny duet ustawia tryb Duo i jeden wynik zespołu.</p>`;
 }
 
 function opisTrudnosci(t) {
-  const n = pula(stan.tryb, t.id).length;
-  if (!dostepna(stan.tryb, t.id)) return `<b>${t.kod}</b> Ta trudność ma w tym trybie za mało kart (${n} z ${MIN_KART}). Wybierz inną.`;
-  return `<span class="kod">${t.kod}</span><span>${t.opis}</span>`;
+  const n = pula(stan.tryb, t.id, stan.sklad).length;
+  if (!dostepna(stan.tryb, t.id, stan.sklad)) return `<b>${t.kod}</b> Ta trudność ma w tym trybie za mało kart (${n} z ${MIN_KART}). Wybierz inną.`;
+  return `<span class="kod">${t.kod} · ${PUNKTACJA[t.id]} pkt</span><span>${t.opis}</span>`;
 }
 
 function aktualizujStart(stary) {
@@ -192,7 +208,7 @@ function aktualizujStart(stary) {
   if (!fs) return;
   const idx = TRUDNOSCI.findIndex(x => x.id === stan.trudnosc);
   fs.style.setProperty('--i', idx);
-  $$('input[name="trud"]').forEach(i => { i.checked = i.value === stan.trudnosc; i.disabled = !dostepna(stan.tryb, i.value); });
+  $$('input[name="trud"]').forEach(i => { i.checked = i.value === stan.trudnosc; i.disabled = !dostepna(stan.tryb, i.value, stan.sklad); });
   $$('input[name="tryb"]').forEach(i => { i.checked = i.value === stan.tryb; });
   $('#trudOpis').innerHTML = opisTrudnosci(trudnosc(stan.trudnosc));
   if (stary && stary.trudnosc !== stan.trudnosc) {
@@ -203,7 +219,8 @@ function aktualizujStart(stary) {
 }
 
 // ---------------- STÓŁ: losowanie, karta, mecz ----------------
-function kartaHTML(m, trud) {
+function kartaHTML(m, r) {
+  const trud = r.trudnosc;
   const t = trudnosc(trud);
   const dop = m.doprecyzowanie.map(k => `<li>${esc(SLOWNIK[k])}</li>`).join('');
   return `<article class="karta t-${trud}" aria-labelledby="kartaTytul">
@@ -211,8 +228,8 @@ function kartaHTML(m, trud) {
     <span class="naroznik n1" aria-hidden="true"></span><span class="naroznik n2" aria-hidden="true"></span>
     <span class="naroznik n3" aria-hidden="true"></span><span class="naroznik n4" aria-hidden="true"></span>
     <header class="karta-gora">
-      <span class="karta-trud">${INSYGNIA[trud]}<span>${t.nazwa}</span></span>
-      <span class="karta-meta"><span>Misja ${m.id}</span><span>${TRYBY[stan.tryb].nazwa}</span></span>
+      <span class="karta-trud">${INSYGNIA[trud] ?? ODZNAKA}<span>${t.nazwa}</span></span>
+      <span class="karta-meta"><span>${cenaRundy(r)} · ${esc(m.id)}</span><span>${TRYBY[stan.tryb].nazwa} · ${SKLADY[stan.sklad]}</span></span>
     </header>
     <div class="karta-tresc">
       <h2 class="karta-tytul" id="kartaTytul">${esc(m.tytul)}</h2>
@@ -229,25 +246,26 @@ function kartaHTML(m, trud) {
 
 function widokStol() {
   const r = S.runda(stan);
-  const m = misja(r.karta);
+  const m = S.misjaRundy(r);
   if (stan.etap !== 'odkrycie') faza = 'odkryta';
   else if (faza === 'odkryta' || faza === 'odkrywanie') faza = 'talia';
   motyw();
   const nr = S.numerRundy(stan);
   return `<section class="widok widok-stol">
     <div class="stol-naglowek">
-      <h2 class="runda-tytul" data-fokus tabindex="-1">${S.swobodny(stan) ? 'Swobodne losowanie' : `Runda <b>${nr}</b><span> z 3</span>`}</h2>
+      <h2 class="runda-tytul" data-fokus tabindex="-1">${S.swobodny(stan) ? 'Swobodne losowanie' : `Runda <b>${nr}</b><span>${napisLimitu(stan)}</span>`}</h2>
       <p class="stol-status" id="stolStatus">${statusStolu()}</p>
+      <span class="stol-stawka">${cenaRundy(r)} ${S.swobodny(stan) ? 'w rozgrywce punktowanej' : 'za zaliczenie'}</span>
     </div>
     <div class="rama" data-faza="${faza}">
       <span class="rama-n r1"></span><span class="rama-n r2"></span><span class="rama-n r3"></span><span class="rama-n r4"></span>
       <div class="karta-wrap" id="kartaWrap">
-        ${kartaHTML(m, stan.trudnosc)}
-        <button class="rewers dotyk t-${stan.trudnosc}" type="button" data-akcja="odkryj" aria-label="Odkryj kartę">${rewers(stan.trudnosc)}</button>
+        ${kartaHTML(m, r)}
+        <button class="rewers dotyk t-${r.trudnosc}" type="button" data-akcja="odkryj" aria-label="Odkryj kartę">${rewers(r.trudnosc === 'specjalna' ? 'ekstremalny' : r.trudnosc)}</button>
         <div class="blysk" aria-hidden="true"></div><div class="fala" aria-hidden="true"></div>
       </div>
       <button class="talia dotyk" type="button" data-akcja="losuj" aria-label="Losuj kartę z talii">
-        ${[0, 1, 2, 3].map(i => `<span class="talia-rewers t-${stan.trudnosc}" style="transform:translate(${i * 3 - 4}px,${-i * 4}px) rotate(${(i - 1.5) * 2.5}deg)">${rewers(stan.trudnosc)}</span>`).join('')}
+        ${[0, 1, 2, 3].map(i => `<span class="talia-rewers t-${r.trudnosc}" style="transform:translate(${i * 3 - 4}px,${-i * 4}px) rotate(${(i - 1.5) * 2.5}deg)">${rewers(r.trudnosc === 'specjalna' ? 'ekstremalny' : r.trudnosc)}</span>`).join('')}
       </button>
     </div>
     <div class="plomien" aria-hidden="true"></div>
@@ -260,6 +278,7 @@ function widokStol() {
 
 function statusStolu() {
   if (stan.etap === 'mecz') return 'Mecz trwa. Karta zostaje tutaj, wróćcie do niej w każdej chwili.';
+  if (stan.etap === 'karta' && S.duet(stan)) return 'Jedna karta dla duetu. Zaznaczcie zaliczenie, gdy oboje spełnicie warunki, chyba że karta opisuje role zespołu.';
   if (stan.etap === 'karta') return S.swobodny(stan) ? 'Możesz zagrać tę kartę albo wylosować następną.' : 'Ta sama karta obowiązuje obu graczy.';
   if (faza === 'zakryta') return 'Karta czeka w ramce. Odkryjcie ją razem.';
   if (faza === 'rozdawanie') return 'Losuję…';
@@ -279,14 +298,14 @@ function akcjeStolu() {
     : `<button class="btn btn-glowny" type="button" data-akcja="graj">Zaczynamy mecz</button>
        <button class="btn btn-drugi" type="button" data-akcja="wymien">${IKONY.wymiana}Losuj nową kartę</button>`;
   const wymiana = S.mozeWymienic(s);
-  const tekstWym = s.seria.wymiana ? 'Wymiana zużyta' : (wymiana ? 'Wymień kartę' : 'Brak kart do wymiany');
+  const tekstWym = s.seria.wymiana && !s.wymianyDowolne ? 'Wymiana zużyta' : (wymiana ? 'Wymień kartę' : 'Brak kart do wymiany');
   if (s.etap === 'karta') return `
     <button class="btn btn-glowny" type="button" data-akcja="graj">Zaczynamy mecz</button>
     <div class="akcje-rzad">
-      <button class="btn btn-drugi" type="button" data-akcja="wymien" ${wymiana ? '' : 'disabled'}>${IKONY.wymiana}<span>${tekstWym}</span>${wymiana ? '<span class="zeton" aria-label="zostało: 1">1</span>' : ''}</button>
+      <button class="btn btn-drugi" type="button" data-akcja="wymien" ${wymiana ? '' : 'disabled'}>${IKONY.wymiana}<span>${tekstWym}</span>${wymiana && !s.wymianyDowolne ? '<span class="zeton" aria-label="zostało: 1">1</span>' : ''}</button>
       <button class="btn btn-drugi" type="button" data-akcja="uniewaznij">${IKONY.uniewaznij}<span>Karta niewykonalna</span></button>
     </div>
-    <p class="akcje-nota">Wymiana: jedna wspólna na całą serię. Niewykonalną kartę unieważniacie bez punktu i bez zużycia wymiany.</p>`;
+    <p class="akcje-nota">${s.wymianyDowolne ? 'Dowolna liczba wymian.' : 'Jedna wymiana na rundę.'} Niewykonalną kartę unieważniacie bez punktu i bez zużycia wymiany.</p>`;
   return `
     <button class="btn btn-glowny" type="button" data-akcja="rozlicz">Mecz skończony, wpisz wyniki</button>
     <div class="akcje-rzad">
@@ -298,13 +317,15 @@ function wyborTrudnosciRundy() {
   const dostepne = new Set(S.dostepneTrudnosci(stan).map(t => t.id));
   return `<label class="stol-trudnosc">Trudność przed losowaniem
     <select name="trud-rundy">
-      ${TRUDNOSCI.map(t => `<option value="${t.id}" ${t.id === stan.trudnosc ? 'selected' : ''} ${dostepne.has(t.id) ? '' : 'disabled'}>${t.nazwa}</option>`).join('')}
+      ${TRUDNOSCI.map(t => `<option value="${t.id}" ${t.id === stan.trudnosc ? 'selected' : ''} ${dostepne.has(t.id) ? '' : 'disabled'}>${t.nazwa} · ${PUNKTACJA[t.id]} pkt</option>`).join('')}
     </select></label>`;
 }
 
 function ustawieniaStolu() {
   const wLosowaniu = faza === 'rozdawanie' || faza === 'odkrywanie';
   return `${stan.etap !== 'mecz' && !wLosowaniu ? wyborTrudnosciRundy() : ''}
+    ${!wLosowaniu && S.mozeWybracSpecjalna(stan) ? '<button class="btn btn-drugi specjalna-przycisk" type="button" data-akcja="legendarna-wybierz">Wybierz „Wygraj bez broni” · 25 pkt</button>' : ''}
+    ${stan.etap === 'karta' || stan.etap === 'mecz' ? `<details class="karta-opinia"><summary>Oceń misję</summary>${formularzOpinii(S.runda(stan).karta)}</details>` : ''}
     ${S.swobodny(stan) ? '' : '<button class="btn btn-cichy" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>'}
     <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Wróć do ustawień</button>`;
 }
@@ -330,17 +351,17 @@ function aktualizujStol() {
 // ---------------- ROZLICZENIE ----------------
 function widokRozliczenie() {
   const r = S.runda(stan);
-  const m = misja(r.karta);
+  const m = S.misjaRundy(r);
   const nr = S.numerRundy(stan);
-  const ost = nr >= S.RUNDY;
+  const ost = S.ostatniaRunda(stan);
   return `<section class="widok widok-rozliczenie">
     <h2 class="sekcja-tytul" data-fokus tabindex="-1">Wyniki rundy ${nr}</h2>
-    <div class="mini-karta t-${stan.trudnosc}">
-      ${INSYGNIA[stan.trudnosc]}
-      <div><p class="mini-tytul">${esc(m.tytul)}</p><p class="mini-zal"><b>Zaliczasz, gdy:</b> ${esc(m.zaliczenie)}</p></div>
+    <div class="mini-karta t-${r.trudnosc}">
+      ${INSYGNIA[r.trudnosc] ?? ODZNAKA}
+      <div><p class="mini-tytul">${esc(m.tytul)} · ${cenaRundy(r)}</p><p class="mini-zal"><b>Zaliczasz, gdy:</b> ${esc(m.zaliczenie)}</p></div>
     </div>
-    <p class="uczciwie">Każdy zaznacza swój wynik. Strona nie sprawdza gry, liczy się uczciwość.</p>
-    <div class="panele">${[0, 1].map(panelGracza).join('')}</div>
+    <p class="uczciwie">${S.duet(stan) ? 'Potwierdźcie jeden wynik zespołu. Zaliczenie daje punkty raz, dla całego duetu.' : 'Każdy potwierdza swój wynik ręcznie. Oboje możecie zaliczyć tę samą kartę.'}</p>
+    <div class="panele">${indeksy().map(panelGracza).join('')}</div>
     <div class="akcje">
       <button class="btn btn-glowny" type="button" data-akcja="zatwierdz" ${S.gotowe(stan) ? '' : 'disabled'}>${ost ? 'Zatwierdź i zobacz finał' : `Zatwierdź rundę ${nr}`}</button>
       <button class="btn btn-cichy" type="button" data-akcja="wroc">${IKONY.wstecz}<span>Wróć do karty</span></button>
@@ -350,26 +371,26 @@ function widokRozliczenie() {
 
 function panelGracza(i) {
   const w = S.runda(stan).wyniki[i];
-  const n = esc(stan.gracze[i]);
+  const n = esc(nazwaWyniku(i));
   return `<div class="panel-gracza p${i}" data-wynik="${w ?? ''}">
     <div class="panel-glowa">${awatar(stan.gracze[i], i)}<span class="panel-nazwa">${n}</span></div>
     <div class="wybor" role="group" aria-label="Wynik gracza ${n}">
       <button class="opcja tak" type="button" data-akcja="wynik" data-g="${i}" data-w="1" aria-pressed="${w === 1}">${IKONY.zalicz}<span>Zaliczone</span></button>
       <button class="opcja nie" type="button" data-akcja="wynik" data-g="${i}" data-w="0" aria-pressed="${w === 0}">${IKONY.nie}<span>Nie tym razem</span></button>
     </div>
-    <p class="etykieta-wyniku">${w === 1 ? '+1 punkt' : w === 0 ? '0 punktów, następnym razem' : 'Wybierz wynik'}</p>
+    <p class="etykieta-wyniku">${w === 1 ? `+${S.wartoscRundy(S.runda(stan))} pkt` : w === 0 ? '0 punktów, następnym razem' : 'Wybierz wynik'}</p>
     <div class="stempel" aria-hidden="true">Zaliczone</div>
   </div>`;
 }
 
 function aktualizujRozliczenie(stary) {
   const r = S.runda(stan), rs = S.runda(stary);
-  [0, 1].forEach(i => {
+  indeksy().forEach(i => {
     const p = $(`.panel-gracza.p${i}`);
     const w = r.wyniki[i];
     p.dataset.wynik = w ?? '';
     $$('.opcja', p).forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.w === w)));
-    $('.etykieta-wyniku', p).textContent = w === 1 ? '+1 punkt' : w === 0 ? '0 punktów, następnym razem' : 'Wybierz wynik';
+    $('.etykieta-wyniku', p).textContent = w === 1 ? `+${S.wartoscRundy(S.runda(stan))} pkt` : w === 0 ? '0 punktów, następnym razem' : 'Wybierz wynik';
     if (rs && rs.wyniki[i] !== w && w === 1) { fx.stempel($('.stempel', p)); fx.podskok($('.panel-glowa .awatar', p)); }
   });
   $('[data-akcja="zatwierdz"]').disabled = !S.gotowe(stan);
@@ -394,6 +415,7 @@ function widokBrak() {
 function tytulFinalu() {
   const z = S.zwyciezca(stan);
   if (!S.rozegrane(stan).length) return 'Seria bez wyniku';
+  if (S.duet(stan)) return 'Wynik duetu';
   return z === null ? 'Remis!' : `Wygrywa ${esc(stan.gracze[z])}!`;
 }
 
@@ -404,26 +426,26 @@ function widokFinal() {
   const wynik = z === null ? 'remis' : String(z);
   return `<section class="widok widok-final" data-wynik="${wynik}">
     <h2 class="final-tytul" data-fokus tabindex="-1" id="finalTytul">${tytulFinalu()}</h2>
-    <div class="podium">
+    <div class="podium ${S.duet(stan) ? 'podium-duet' : ''}">
       <div class="reflektor" aria-hidden="true"></div>
-      ${[0, 1].map(i => `
+      ${indeksy().map(i => `
         <div class="kolumna p${i} ${z === i || (z === null && rundy.length) ? 'na-szczycie' : ''}">
           <div class="promienie" aria-hidden="true"></div>
           <div class="odznaka-miejsce" aria-hidden="true">${ODZNAKA}</div>
           ${awatar(stan.gracze[i], i, 'duzy')}
-          <p class="kolumna-nazwa">${esc(stan.gracze[i])}</p>
-          <p class="kolumna-pkt"><span class="beben" aria-hidden="true"><span class="beben-tasma">${'0123'.split('').map(d => `<span>${d}</span>`).join('')}</span></span><span class="sr">${p[i]} pkt</span><span class="pkt-j" aria-hidden="true">pkt</span></p>
+          <p class="kolumna-nazwa">${esc(nazwaWyniku(i))}</p>
+          <p class="kolumna-pkt"><span class="beben" aria-hidden="true" data-punkty="${p[i]}">${p[i]}</span><span class="sr">${p[i]} pkt</span><span class="pkt-j" aria-hidden="true">pkt</span></p><p class="kolumna-zaliczenia">${zaliczenia(i)} zaliczeń</p>
         </div>`).join('<div class="final-vs" aria-hidden="true">:</div>')}
     </div>
     ${rundy.length ? `<table class="tabela-rund">
       <caption>Rundy. Dotknij wyniku, żeby go poprawić.</caption>
-      <thead><tr><th scope="col">Misja</th>${[0, 1].map(i => `<th scope="col">${esc(stan.gracze[i])}</th>`).join('')}</tr></thead>
+      <thead><tr><th scope="col">Misja</th>${indeksy().map(i => `<th scope="col">${esc(nazwaWyniku(i))}</th>`).join('')}</tr></thead>
       <tbody>${rundy.map((r, n) => `<tr class="wiersz">
-        <th scope="row"><span class="nr">${n + 1}</span>${esc(misja(r.karta).tytul)}<small>${trudnosc(misja(r.karta).trudnosc).nazwa}</small></th>
-        ${[0, 1].map(i => komorka(r, n, i)).join('')}
+        <th scope="row"><span class="nr">${n + 1}</span>${esc(S.misjaRundy(r).tytul)}<small>${trudnosc(r.trudnosc).nazwa} · ${cenaRundy(r)}</small></th>
+        ${indeksy().map(i => `<td>${przyciskWyniku(r, n, i)}</td>`).join('')}
       </tr>`).join('')}</tbody>
     </table>` : ''}
-    ${stan.seria.koniec === 'wczesniej' ? `<p class="nota">Seria zakończona wcześniej: ${rundy.length} z 3 rund.</p>` : ''}
+    ${stan.seria.koniec === 'wczesniej' ? `<p class="nota">Seria zakończona wcześniej: ${rundy.length}${napisLimitu(stan)} rund.</p>` : ''}
     <div class="akcje">
       <button class="btn btn-glowny btn-rewanz" type="button" data-akcja="rewanz">Rewanż</button>
       <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Zmień graczy albo trudność</button>
@@ -431,11 +453,11 @@ function widokFinal() {
   </section>`;
 }
 
-function komorka(r, n, i) {
+function przyciskWyniku(r, n, i) {
   const w = r.wyniki[i];
-  const nazwa = esc(stan.gracze[i]);
-  return `<td><button class="komorka ${w ? 'tak' : 'nie'}" type="button" data-akcja="popraw" data-r="${n}" data-g="${i}"
-    aria-label="Runda ${n + 1}, ${nazwa}: ${w ? 'zaliczone' : 'niezaliczone'}. Zmień">${w ? IKONY.zalicz : IKONY.nie}</button></td>`;
+  const nazwa = esc(nazwaWyniku(i));
+  return `<button class="komorka ${w ? 'tak' : 'nie'}" type="button" data-akcja="popraw" data-r="${n}" data-g="${i}"
+    aria-label="Runda ${n + 1}, ${nazwa}: ${w ? 'zaliczone' : 'niezaliczone'}. Zmień">${w ? `+${r.punkty}` : '0'} pkt</button>`;
 }
 
 function aktualizujFinal() {
@@ -443,14 +465,23 @@ function aktualizujFinal() {
   const p = S.punkty(stan), z = S.zwyciezca(stan), rundy = S.rozegrane(stan);
   sek.dataset.wynik = z === null ? 'remis' : String(z);
   $('#finalTytul').innerHTML = tytulFinalu();
-  [0, 1].forEach(i => {
+  indeksy().forEach(i => {
     const k = $(`.kolumna.p${i}`);
     k.classList.toggle('na-szczycie', z === i || (z === null && rundy.length > 0));
-    $('.beben-tasma', k).style.transform = `translateY(${-p[i]}em)`;
+    const liczba = $('.beben', k);
+    fx.licznik(liczba, +liczba.dataset.punkty, p[i]);
+    liczba.dataset.punkty = p[i];
+    $('.kolumna-zaliczenia', k).textContent = `${zaliczenia(i)} zaliczeń`;
     $('.sr', k).textContent = `${p[i]} pkt`;
   });
-  $$('.wiersz', sek).forEach((tr, n) => { $$('td', tr).forEach((td, i) => { td.innerHTML = komorka(rundy[n], n, i); }); });
-  oglos(`${tytulFinalu()} ${stan.gracze[0]} ${p[0]}, ${stan.gracze[1]} ${p[1]}.`);
+  $$('.wiersz', sek).forEach((tr, n) => {
+    $$('td', tr).forEach((td, i) => {
+      const aktywny = td.contains(document.activeElement);
+      td.innerHTML = przyciskWyniku(rundy[n], n, i);
+      if (aktywny) td.firstElementChild.focus();
+    });
+  });
+  oglos(`${tytulFinalu()} ${p.map((pkt, i) => `${nazwaWyniku(i)} ${pkt} pkt`).join(', ')}.`);
 }
 
 // ---------------------------------------------------------
@@ -472,7 +503,7 @@ function podlacz(stary, losujPoWymianie) {
   if (w === 'final') {
     const p = S.punkty(stan), z = S.zwyciezca(stan);
     fx.finalWejscie($$('.kolumna'), $$('.wiersz'), $('#finalTytul'));
-    $$('.kolumna').forEach((k, i) => fx.beben($('.beben', k), p[i], 260));
+    $$('.kolumna').forEach((k, i) => fx.licznik($('.beben', k), 0, p[i]));
     if (stary && S.rozegrane(stan).length) {
       const kol = z === null ? ['#ff7a45', '#36d0ff', '#ffcf3a', '#eef1e6'] : [z ? '#36d0ff' : '#ff7a45', '#ffcf3a', '#eef1e6'];
       const zr = z === null ? [[.25, .42], [.75, .42]] : [[z ? .72 : .28, .4]];
@@ -480,7 +511,7 @@ function podlacz(stary, losujPoWymianie) {
         if (stan.etap === 'final' && document.body.dataset.dzial === 'wyzwania') fx.konfetti(kol, zr);
       }, fx.reduced ? 0 : 420);
     }
-    oglos(`${tytulFinalu()} ${stan.gracze[0]} ${p[0]} punktów, ${stan.gracze[1]} ${p[1]} punktów.`);
+    oglos(`${tytulFinalu()} ${p.map((pkt, i) => `${nazwaWyniku(i)} ${pkt} pkt`).join(', ')}.`);
     return;
   }
   fx.wejscie($$(`.widok > *`, ekran), 40);
@@ -497,23 +528,23 @@ async function losuj() {
   await fx.rozdaj($('.talia'), wrap);
   if (stan.etap !== 'odkrycie' || faza !== 'rozdawanie') return;
   faza = 'zakryta'; aktualizujStol();
-  if (pominiecie) { odkryjTeraz(); return; }
+  if (pominiecie) { odkryjTeraz(true); return; }
   $('.rewers')?.focus({ preventScroll: true });
 }
 
-async function odkryjTeraz() {
+async function odkryjTeraz(bezAnimacji = false) {
   if (stan.etap !== 'odkrycie' || faza === 'odkrywanie') return;
   faza = 'odkrywanie'; aktualizujStol();
   // stan zapisujemy od razu; animacja jest tylko dekoracją
   const nowy = S.odkryj(stan);
   stan = nowy; if (trwaly && !zapisz(stan)) { trwaly = false; pokazKomunikat(tekstBrakuZapisu); }
   const karta = $('#kartaWrap');
-  const anim = fx.odkryj(karta, stan.trudnosc);
+  const anim = bezAnimacji || fx.reduced ? null : fx.odkryj(karta, S.runda(stan).trudnosc);
   faza = 'odkryta';
   await anim;
   if (stan !== nowy) return;
   motyw(); renderHud(); aktualizujStol(); aktualizujPortal(stan);
-  const m = misja(S.runda(stan).karta);
+  const m = S.misjaRundy(S.runda(stan));
   oglos(`Misja ${m.tytul}. ${m.cel} Od kiedy: ${m.odKiedy} Zaliczasz, gdy: ${m.zaliczenie}`);
   $('#kartaTytul')?.setAttribute('tabindex', '-1');
   $('#kartaTytul')?.focus({ preventScroll: true });
@@ -522,7 +553,7 @@ async function odkryjTeraz() {
 function pomin() {
   pominiecie = true;
   if (faza === 'rozdawanie') { fx.dokoncz(); return; }
-  if (faza === 'talia' || faza === 'zakryta') odkryjTeraz();
+  if (faza === 'talia' || faza === 'zakryta') odkryjTeraz(true);
 }
 
 // ---------------------------------------------------------
@@ -541,12 +572,30 @@ function potwierdz(btn, tekst) {
   return false;
 }
 
+function potwierdzZmiane(tytul, opis, akcja, przycisk = 'Potwierdź') {
+  const d = $('#potwierdz-serie');
+  if (d.open) return;
+  $('#potwierdz-tytul').textContent = tytul;
+  $('p', d).textContent = opis;
+  $('button[value="reset"]', d).textContent = przycisk;
+  d.returnValue = '';
+  d.addEventListener('close', () => {
+    if (d.returnValue !== 'reset') return;
+    const nastepny = akcja();
+    if (nastepny === stan) return;
+    ostatniaAkcja = null;
+    faza = 'talia';
+    ustaw(nastepny);
+  }, { once: true });
+  d.showModal();
+}
+
 function potwierdzZakonczenie(akcja) {
   const d = $('#potwierdz-serie');
   const ustawienia = akcja === 'konfiguracja';
   $('#potwierdz-tytul').textContent = ustawienia ? 'Wrócić do ustawień?' : 'Zakończyć serię?';
   $('p', d).textContent = ustawienia
-    ? 'Po powrocie do ustawień bieżąca karta i wynik tej gry zostaną wyczyszczone.'
+    ? 'Bieżąca karta zostanie porzucona. Ukończone rundy zostaną w historii.'
     : 'Podsumowanie zachowa ukończone rundy. Bieżąca runda zostanie zamknięta.';
   $('button[value="reset"]', d).textContent = ustawienia ? 'Wróć do ustawień' : 'Zakończ serię';
   d.returnValue = '';
@@ -564,6 +613,13 @@ document.addEventListener('click', e => {
   const a = b.dataset.akcja;
   ostatniaAkcja = a;
   switch (a) {
+    case 'legendarna-start':
+    case 'legendarna-duet': faza = 'talia'; ustaw(S.rozpocznij(stan, a === 'legendarna-duet' ? 'duet' : 'seria', true)); break;
+    case 'legendarna-wybierz': {
+      potwierdzZmiane('Wybrać misję legendarną?', 'Bieżącą kartę zastąpi „Wygraj bez broni” za 25 pkt. Rozegrane rundy zostają.', () => S.wybierzSpecjalna(stan));
+      break;
+    }
+    case 'rozpocznij-duet': faza = 'talia'; ustaw(S.rozpocznij(stan, 'duet')); break;
     case 'rozpocznij': faza = 'talia'; ustaw(S.rozpocznij(stan, 'seria')); break;
     case 'rozpocznij-swobodnie':
     case 'graj-od-razu': {
@@ -579,10 +635,11 @@ document.addEventListener('click', e => {
     case 'rozlicz': ustaw(S.doRozliczenia(stan)); break;
     case 'wroc': faza = 'odkryta'; ustaw(S.wrocDoKarty(stan)); break;
     case 'wymien': {
+      if (stan.etap === 'karta' && !S.swobodny(stan) && !potwierdz(b, 'Porzucić kartę? Dotknij ponownie')) break;
       const n = S.wymien(stan);
       if (n === stan) break;
       faza = 'talia'; ustaw(n);
-      if (!S.swobodny(stan)) pokazKomunikat('Karta wymieniona. Wymiana na tę serię jest zużyta.', 3200);
+      if (!S.swobodny(stan) && !stan.wymianyDowolne) pokazKomunikat('Wymiana w tej rundzie wykorzystana.', 3200);
       break;
     }
     case 'kolejna-swobodna': {
@@ -628,13 +685,21 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.name === 'tryb') ustaw(S.ustawTryb(stan, t.value));
   if (t.name === 'trud') ustaw(S.ustawTrudnosc(stan, t.value));
+  if (['sklad', 'limit', 'wymianyDowolne'].includes(t.name)) {
+    ustaw(S.ustawOpcje(stan, t.name, t.type === 'checkbox' ? t.checked : t.name === 'limit' ? +t.value : t.value));
+  }
   if (t.name === 'trud-rundy') {
-    const nowy = S.zmienTrudnosc(stan, t.value);
+    const trud = t.value;
+    const nowy = S.zmienTrudnosc(stan, trud);
     if (nowy === stan) return;
-    ostatniaAkcja = null;
-    faza = 'talia';
-    ustaw(nowy);
-    oglos(`Trudność następnej karty: ${trudnosc(nowy.trudnosc).nazwa}.`);
+    if (stan.etap === 'karta') {
+      t.value = stan.trudnosc;
+      potwierdzZmiane('Zmienić trudność?', 'Porzucisz bieżącą kartę. Punkty i ukończone rundy zostają.', () => S.zmienTrudnosc(stan, trud));
+    } else {
+      ostatniaAkcja = null;
+      faza = 'talia';
+      ustaw(nowy);
+    }
   }
 });
 
@@ -678,13 +743,13 @@ function otworzInfo() {
         <ol class="kroki">
           <li>Wpiszcie pseudonimy. Wybierzcie tryb i trudność.</li>
           <li>Losujcie kartę. Jedna karta obowiązuje obu graczy.</li>
-          <li>Każdy gra swój mecz w tym samym trybie. Najlepiej Solo.</li>
-          <li>Po meczu każdy zaznacza swój wynik. Zaliczenie to 1 punkt, brak to 0.</li>
-          <li>Po trzech rundach jest finał i rewanż.</li>
+          <li>W pojedynku każdy osobno wykonuje tę samą misję. Wspólny duet ustawia tryb Duo i jeden wynik zespołu.</li>
+          <li>Po meczu każdy zaznacza swój wynik. Zaliczenie daje 1, 3, 5, 7 lub 10 pkt według trudności. Brak zaliczenia daje 0.</li>
+          <li>Wybierz 3, 5, 10 rund albo serię bez limitu. Możesz zakończyć serię i zobaczyć wynik w dowolnej chwili.</li>
         </ol>
-        <p><b>Wymiana.</b> Jedna wspólna na serię, przed rozpoczęciem rundy. Wymieniona karta nie wraca w tej serii.</p>
+        <p><b>Wymiana.</b> Domyślnie jedna na rundę. Przed serią możesz ustawić dowolną liczbę.</p>
         <p><b>Swobodne losowanie.</b> Zmieniaj trudność i losuj kolejne karty bez limitu. Ten tryb jest bez punktów.</p>
-        <p><b>Trudność w serii.</b> Można ją zmienić przed meczem. Każde zaliczenie nadal daje 1 punkt.</p>
+        <p><b>Trudność w serii.</b> Można ją zmienić przed meczem. Punkty ukończonych rund pozostają bez zmian. Legendarna karta daje 25 pkt za zaliczenie.</p>
         <p><b>Karta niewykonalna.</b> Unieważniacie ją bez punktu i bez zużycia wymiany. Dostajecie nową kartę.</p>
         <h3>Co dokładnie się liczy</h3>
         <ul class="slownik">${Object.values(SLOWNIK).map(t => `<li>${esc(t)}</li>`).join('')}</ul>
@@ -719,6 +784,8 @@ function otworzInfo() {
       pokazKomunikat('Nie udało się usunąć danych w tej przeglądarce.');
       return;
     }
+    wyczyscOpinie();
+    document.dispatchEvent(new CustomEvent('kilek:opinia'));
     const poResecie = wczytaj();
     stan = poResecie.stan;
     trwaly = poResecie.trwaly;
@@ -736,9 +803,10 @@ fx.reakcjaDotyku(document);
 fx.paralaksa();
 document.addEventListener('visibilitychange', () => document.documentElement.classList.toggle('ukryta', document.hidden));
 
-uruchomPortal();
+podlaczOpinie();
+uruchomPortal(() => stan);
 render();
-fx.uruchomScene($('.portal-scena'));
+uruchomArene($('#arena-canvas'));
 if (wczytane.uwaga === 'uszkodzony') pokazKomunikat('Zapis był uszkodzony. Zaczynacie od nowa.');
 if (wczytane.uwaga === 'starszy') pokazKomunikat('Wczytano zapis ze starszej wersji.');
 if (wczytane.uwaga === 'nowszy') pokazKomunikat('Zapis pochodzi z nowszej wersji strony. Nie nadpisujemy go, ta sesja nie będzie zapisana.');

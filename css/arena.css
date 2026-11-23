@@ -1,0 +1,318 @@
+/* Neon Arena · nawigacja, scena i działy portalu */
+:root {
+  --arena-panel: #15142c;
+  --arena-linia: #493768;
+  --arena-pomarancz: #ff9a61;
+  --arena-roz: #ff79d9;
+  --arena-cyjan: #94edff;
+}
+.portal-bar-in { gap: clamp(8px, 2vw, 26px); }
+.portal-menu { gap: 4px; }
+.portal-menu a { padding-inline: clamp(7px, 1.25vw, 18px); }
+.portal-menu-wiecej { display: flex; gap: 4px; }
+.portal-menu-toggle { display: none; }
+.portal-menu a[aria-current="page"] { color: #fff; background: #2b1e50; }
+.portal-menu a:focus-visible, .portal-menu-toggle:focus-visible { outline-offset: 2px; }
+
+.portal-hero {
+  grid-template-columns: minmax(290px, .93fr) minmax(0, 1.07fr);
+  min-height: clamp(480px, 43vw, 590px);
+  padding-top: 46px;
+  overflow: clip;
+}
+.portal-hero::before {
+  background: radial-gradient(ellipse at 75% 50%, #6342ba53, transparent 65%);
+}
+.portal-hero::after {
+  position: absolute;
+  content: "";
+  z-index: -1;
+  inset: 10% 0 0 18%;
+  pointer-events: none;
+  background: linear-gradient(123deg, transparent 46%, #8b5cf634 46.5%, transparent 47.3% 52%, #ff7b2c25 52.5%, transparent 54%);
+  mask-image: linear-gradient(90deg, transparent, #000 38%, #000 88%, transparent);
+}
+.portal-logo-kilek { font-size: clamp(92px, 12vw, 168px); }
+.portal-logo-challenge { color: #e0bcff; }
+.portal-lead { max-width: 39ch; }
+.portal-cta .btn-glowny { box-shadow: 0 10px 45px #ff865333; }
+.portal-scena {
+  display: block;
+  min-height: clamp(395px, 41vw, 505px);
+  background:
+    radial-gradient(ellipse at 55% 49%, #623ab82b, transparent 63%),
+    radial-gradient(ellipse at 65% 63%, #47104d37, transparent 72%);
+  touch-action: pan-y;
+}
+.arena-canvas { display: block; width: 100%; height: 100%; position: absolute; inset: 0; }
+.arena-reticle {
+  position: absolute;
+  inset: 12% 8% 15%;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--arena-cyjan),var(--arena-cyjan)) 0 0 / 21px 1px,
+    linear-gradient(var(--arena-cyjan),var(--arena-cyjan)) 0 0 / 1px 21px,
+    linear-gradient(var(--arena-roz),var(--arena-roz)) 100% 100% / 21px 1px,
+    linear-gradient(var(--arena-roz),var(--arena-roz)) 100% 100% / 1px 21px;
+  background-repeat: no-repeat;
+  opacity: .74;
+  animation: arena-celownik 1s var(--ease) both;
+}
+@keyframes arena-celownik {
+  from { transform: scale(1.24) translateY(15px); opacity: 0; }
+  to { transform: none; opacity: .74; }
+}
+.arena-obrot {
+  position: absolute;
+  bottom: 2%; right: 8%;
+  border: 1px solid #9271c9;
+  border-radius: 5px;
+  background: #14122e;
+  color: var(--tekst);
+  padding: 7px 14px;
+  min-height: 44px;
+  font: 700 17px/1.1 var(--disp);
+  transition: background .18s, transform .18s;
+}
+.arena-obrot:hover { background: #302050; }
+.arena-obrot:active { transform: scale(.96); }
+.portal-kafle { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.portal-kafel {
+  min-height: 116px;
+  position: relative;
+  overflow: clip;
+  background: linear-gradient(132deg, #2b1b4a, #15132b 72%);
+}
+.portal-kafel:nth-child(3n+2) { background: linear-gradient(132deg, #292047, #15132b 72%); }
+.portal-ikona-svg::before, .portal-ikona-svg::after { content: none; }
+.portal-ikona-svg svg {
+  width: 25px;
+  fill: none;
+  stroke: #bea2ff;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.portal-kafel:nth-child(2n) .portal-ikona-svg svg { stroke: var(--arena-cyjan); }
+.portal-kafel:nth-child(5) .portal-ikona-svg svg { stroke: var(--arena-pomarancz); }
+.portal-kafel::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: auto -40% 0 0;
+  height: 2px;
+  transform: translateX(-109%);
+  background: linear-gradient(90deg, transparent, #bd75ff 55%, #ff9856 73%, transparent);
+  transition: transform .4s var(--ease);
+}
+.portal-kafel:is(:hover, :focus-visible)::after { transform: translateX(0); }
+
+.dzial-portal { padding-block: clamp(30px, 6vw, 80px); }
+.dzial-naglowek { margin: 0 0 28px; max-width: 840px; }
+.dzial-naglowek p, .znacznik {
+  margin: 0 0 8px;
+  color: var(--arena-cyjan);
+  font: 700 16px/1.2 var(--disp);
+  letter-spacing: .065em;
+}
+.dzial-naglowek h1 {
+  margin: 0;
+  font: 800 italic clamp(48px, 9vw, 105px)/.95 var(--disp);
+  color: #f8f1ff;
+  text-shadow: 3px 4px #56359b;
+  overflow-wrap: anywhere;
+}
+.dzial-naglowek div { color: var(--tekst-2); font-size: clamp(17px, 2vw, 22px); margin-top: 14px; }
+.dzial-cta { display: inline-flex; width: auto; margin-top: 20px; }
+.wiedza-uklad { display: grid; grid-template-columns: minmax(210px, .4fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.wiedza-opcje { display: grid; gap: 5px; min-width: 0; }
+.wiedza-opcje button {
+  min-height: 45px;
+  border-radius: 7px;
+  border: 1px solid var(--arena-linia);
+  background: #14132b;
+  color: var(--tekst);
+  text-align: left;
+  padding: 8px 12px;
+  transition: background .16s, border-color .16s, transform .18s;
+}
+.wiedza-opcje button[aria-pressed="true"] { border-color: #c097ff; background: #322156; }
+.wiedza-opcje button:is(:hover, :focus-visible) { border-color: #c097ff; }
+.wiedza-opcje button:active { transform: scale(.98); }
+.wiedza-panel {
+  min-width: 0;
+  background: linear-gradient(153deg, #1d1537, #131328 60%);
+  border: 1px solid var(--arena-linia);
+  border-radius: 9px;
+  padding: clamp(14px, 3vw, 34px);
+}
+.wiedza-panel h2, .wiedza-panel h3 {
+  margin: 0 0 9px;
+  font: 800 italic clamp(30px, 4vw, 50px)/1.05 var(--disp);
+}
+.wiedza-panel h3 { margin-top: 15px; font-size: 25px; }
+.wiedza-panel h2 + p, .wiedza-panel h3 + p { margin-top: 6px; }
+.wiedza-panel ul, .wiedza-panel ol { padding-inline-start: 21px; }
+.wiedza-panel li + li { margin-top: 7px; }
+.wiedza-panel time { color: var(--tekst-2); }
+.dwa-pola { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.dwa-pola > * { background: #272040; margin: 0; padding: 10px 12px; border-radius: 4px; }
+.dwa-pola dd { margin: 4px 0 0; }
+.dwa-pola dt { color: var(--arena-cyjan); font-weight: 700; }
+.model-viewport {
+  display: grid;
+  place-items: center;
+  min-height: 185px;
+  max-height: 285px;
+  perspective: 600px;
+  background: radial-gradient(ellipse, #522b844d, #100e23 73%);
+  border: 1px solid #594281;
+  overflow: hidden;
+}
+.model-svg {
+  width: min(100%, 395px);
+  height: min(54vw, 278px);
+  transform: rotateY(var(--obrot, 0deg));
+  transition: transform .24s var(--ease);
+  animation: sprzet-wejscie .55s var(--ease) both;
+}
+@keyframes sprzet-wejscie { from { transform: rotateY(-42deg) translateX(17px); opacity: .22; } }
+.model-front { fill: #b18be7; stroke: #f2caff; stroke-width: 2; }
+.model-cien { fill: #4c2485; stroke: #9c68ff; stroke-width: 2; }
+.model-siatka { fill: none; stroke: #b988fb95; stroke-dasharray: 5 5; stroke-width: 1.2; }
+.model-siata { fill: #39195e4d; stroke: #4fd8e973; stroke-width: 1.3; }
+.model-obrot, .wiedza-demo label { display: block; padding-block: 8px; color: var(--tekst-2); }
+input[type="range"] { width: 100%; min-height: 34px; accent-color: #bb8aff; }
+.porownanie, .quiz, .historia { margin-top: 18px; }
+.porownanie-wybor, .porownanie-wynik, .ranking-uklad {
+  display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px;
+}
+.porownanie-wynik article { padding: 10px 14px; background: #211b38; border-radius: 6px; }
+.porownanie-wynik label { display: grid; grid-template-columns: 68px minmax(0,1fr); align-items: center; }
+.porownanie-wynik meter { width: 100%; height: 15px; accent-color: #be8fff; }
+
+.wiedza-demo { padding-top: 14px; }
+.demo-scena {
+  position: relative; height: 145px; overflow: hidden;
+  border: 1px solid #624589;
+  background:
+    repeating-linear-gradient(90deg,transparent 0 24px,#9b65f319 24px 25px),
+    repeating-linear-gradient(0deg,transparent 0 24px,#9b65f319 24px 25px),#14112b;
+}
+.demo-gracz, .demo-cel, .demo-stala { position: absolute; display: block; transition: transform .25s, width .25s, left .25s; }
+.demo-gracz {
+  width: 18px; height: 18px; top: 50%; left: calc(6% + var(--gracz) * .88%); transform: translate(-50%, -50%) rotate(45deg);
+  background: var(--arena-pomarancz); border: 2px solid #ffdfce; border-radius: 3px;
+}
+.demo-cel { width: 18px; height: 18px; top: 50%; left: calc(6% + var(--cel) * .88%); transform: translate(-50%, -50%); border: 2px solid var(--arena-cyjan); border-radius: 50%; }
+.demo-scena:not(.demo-cel) > .demo-cel { display: none; }
+.demo-scena.demo-cel { width: auto; height: 145px; top: auto; left: auto; transform: none; border-radius: 0; }
+.demo-strefa .demo-stala { left: 50%; top: 50%; width: calc(146px - var(--gracz) * 1.05px); aspect-ratio: 1; transform: translate(-50%,-50%); border: 2px solid var(--arena-roz); border-radius: 50%; background: #8957ff33; }
+.demo-strefa .demo-gracz { top: 71%; }
+.demo-oslona .demo-stala { z-index: 1; top: 29%; left: 35%; width: 30%; height: 23%; background: #66489f; border: 2px solid #aa8ae6; }
+.demo-oslona .demo-gracz { top: 70%; }
+.demo-oslona::before, .demo-dystans::before {
+  position: absolute; content: ""; left: 6%; right: 6%; top: 50%; background: #dd9cfc80; height: 1px;
+}
+.demo-dystans .demo-stala { top: 36%; bottom: 36%; left: 6%; width: calc(var(--gracz) * .88%); background: #9d64fd50; border-left: 2px solid #c298ff; }
+.wiedza-demo [role="status"], #quiz-wynik { min-height: 28px; color: var(--arena-cyjan); }
+.quiz fieldset { margin: 12px 0; border: 1px solid #59427e; border-radius: 5px; }
+.quiz label { display: flex; gap: 9px; align-items: flex-start; padding: 5px 4px; }
+.quiz input, .opcja-serii input { accent-color: #bf97ff; }
+.quiz input { flex: none; }
+.quiz button { width: auto; }
+.aktualnosci-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
+.notatka h2 { font-size: clamp(26px,4vw,38px); margin-top: 12px; }
+.ranking { padding-left: 22px; }
+.ranking li { padding: 9px 0; border-bottom: 1px solid #493768; }
+.ranking li b { float: right; color: #ffb678; }
+.ranking li small { display: block; color: var(--tekst-2); }
+.odznaki { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
+.odznaki span {
+  display: inline-block; border: 1px solid #9379bb; background: #32224e; color: #f5daff;
+  border-radius: 4px; padding: 3px 7px; font-size: 14px;
+}
+.historia details { padding: 6px 12px; border-bottom: 1px solid #644b91; }
+.historia summary { cursor: pointer; min-height: 44px; }
+.historia summary span { display: block; color: var(--tekst-2); }
+.katalog-filtry { grid-template-columns: minmax(0,1.5fr) repeat(4,minmax(0,1fr)); }
+.katalog-opinie, .karta-opinia { padding: 8px 12px; margin-top: 12px; border: 1px solid #6b508c; border-radius: 5px; }
+.katalog-opinie summary, .karta-opinia summary { cursor: pointer; min-height: 43px; line-height: 2.4; }
+.katalog-opinie textarea { display: block; width: 100%; resize: vertical; margin-block: 8px; }
+.katalog-karta .opinia-form { margin: 0 12px 10px; }
+.katalog-ocena:empty { display: none; }
+.opinia-form { display: grid; gap: 7px; margin-bottom: 8px; }
+.opinia-form label, .ustaw-serie label { display: grid; gap: 4px; }
+.opinia-form input, .opinia-form select, .katalog-opinie textarea, .porownanie-wybor select, .ustaw-serie select {
+  width: 100%; min-height: 44px; padding: 6px 8px; background: #141229; color: var(--tekst);
+  border: 1px solid #8a6eb5; border-radius: 4px; font: inherit;
+}
+.porownanie-wybor label { display: grid; gap: 5px; }
+.opinia-status, #katalog-kopia-status { color: var(--arena-cyjan); }
+.ustaw-serie { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+.ustaw-serie .opcja-serii { display: flex; align-items: center; gap: 7px; grid-column: 1/-1; min-height: 42px; }
+.opcja-serii input { inline-size: 22px; block-size: 22px; }
+.legendarna-promo {
+  background: linear-gradient(125deg,#412456,#251533 67%); border: 1px solid #cb7ec1;
+  border-left: 4px solid #ffb575; border-radius: 6px; padding: 14px;
+}
+.legendarna-promo strong { font: 800 italic 30px/1 var(--disp); }
+.legendarna-promo p { margin-block: 7px 12px; }
+.legendarna-akcje { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+.t-specjalna, body[data-trud="specjalna"] { --acc: #ffc081; --acc-ink: #7e224f; --acc-rgb: 255,162,103; }
+.karta.t-specjalna { border-color: #ffa977; box-shadow: 0 0 24px -6px #ff8fc1aa; }
+.karta.t-specjalna .karta-gora { background: linear-gradient(140deg,#592c64,#301741 73%); }
+.specjalna-przycisk { border-color: #dd92b8; color: #ffd7bf; }
+.stol-stawka, .hud-etap span { color: #ffc295; font: 700 15px/1.2 var(--disp); }
+.stol-stawka { display: inline-block; border: 1px solid #915379; background: #2f1c3d; border-radius: 4px; padding: 5px 8px; }
+.hud-etap { display: grid; gap: 3px; line-height: 1.2; }
+.hud-wynik { margin-left: auto; margin-right: 0; }
+.trud-in small { color: var(--acc); font: 700 13px/1 var(--disp); }
+.podium-duet { grid-template-columns: minmax(0, 360px); justify-content: center; }
+.kolumna-zaliczenia { margin: 0; font-size: 14px; color: var(--tekst-2); }
+.beben { font-size: clamp(44px, 10vw, 76px); }
+.tabela-rund .komorka { min-width: 50px; font-size: 16px; }
+.panele:has(.panel-gracza:only-child) { grid-template-columns: minmax(0,1fr); }
+[data-wejscie="tak"] { animation: sekcja-wejscie .5s var(--ease) both; }
+@keyframes sekcja-wejscie { from { opacity: .32; transform: translateY(15px); } }
+
+@media (max-width: 930px) {
+  .portal-menu-wiecej { display: none; }
+  .portal-menu-toggle {
+    display: block; min-height: 44px; border-radius: 5px; padding: 4px 9px; background: #292046;
+    color: var(--tekst); border: 1px solid #8763b7; font: 700 17px/1.2 var(--disp);
+  }
+  .portal-menu-toggle[aria-expanded="true"] + .portal-menu-wiecej {
+    position: absolute; right: 12px; top: calc(100% + 4px); display: grid; z-index: 5;
+    background: #16112e; padding: 7px; border: 1px solid #7954a4; border-radius: 8px; min-width: 172px;
+    box-shadow: 0 16px 28px #05021099; animation: sekcja-wejscie .24s var(--ease) both;
+  }
+  .portal-menu-wiecej a { justify-content: start; }
+  .katalog-filtry { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .katalog-filtry label:first-child { grid-column: 1/-1; }
+}
+@media (max-width: 710px) {
+  .portal-hero { padding: 25px 0 13px; min-height: 0; grid-template-columns: 1fr; }
+  .portal-logo-kilek { font-size: clamp(85px, 21vw, 128px); }
+  .portal-scena { min-height: clamp(236px, 68vw, 345px); }
+  .portal-hero::after { inset: 28% 0 0; }
+  .portal-kafle { grid-template-columns: 1fr; }
+  .portal-kafel { min-height: 78px; }
+  .wiedza-uklad { grid-template-columns: 1fr; }
+  .wiedza-opcje { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .wiedza-opcje button { font-size: 15px; }
+  .aktualnosci-grid, .ranking-uklad { grid-template-columns: 1fr; }
+  .porownanie-wynik label { grid-template-columns: minmax(0,1fr); }
+}
+@media (max-width: 430px) {
+  .portal-menu { gap: 2px; }
+  .portal-menu a { padding-inline: 5px; }
+  .portal-bar-in { width: calc(100% - 16px); gap: 5px; }
+  .wybor-zabawy { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .wybor-zabawy .btn-glowny { grid-column: 1/-1; }
+  .legendarna-akcje { grid-template-columns: 1fr; }
+  .dwa-pola { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arena-reticle, .model-svg, [data-wejscie], .portal-menu-wiecej { animation: none; }
+}

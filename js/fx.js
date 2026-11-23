@@ -112,31 +112,6 @@ export function paralaksa() {
   }, { passive: true });
 }
 
-export function uruchomScene(scena) {
-  let klatka;
-  scena.addEventListener('pointermove', e => {
-    if (reduced || e.pointerType === 'touch') return;
-    const prostokat = scena.getBoundingClientRect();
-    const x = (e.clientX - prostokat.left) / prostokat.width - .5;
-    const y = (e.clientY - prostokat.top) / prostokat.height - .5;
-    cancelAnimationFrame(klatka);
-    klatka = requestAnimationFrame(() => {
-      scena.style.setProperty('--scena-x', `${-y * 19}deg`);
-      scena.style.setProperty('--scena-y', `${x * 23}deg`);
-    });
-  });
-  scena.addEventListener('pointerleave', () => {
-    cancelAnimationFrame(klatka);
-    scena.style.removeProperty('--scena-x');
-    scena.style.removeProperty('--scena-y');
-  });
-  scena.addEventListener('pointerdown', e => {
-    if (!reduced && e.pointerType === 'touch') {
-      scena.animate([{ scale: 1 }, { scale: .96 }, { scale: 1 }], { duration: 280, easing: EASE_OUT });
-    }
-  });
-}
-
 // Zmiana koloru mapy jest jednorazowa (jedno przemalowanie), a przejście
 // maskuje krótki „mrug” warstwy, który działa tylko na kompozytorze.
 export function przebarwMape() {
@@ -192,15 +167,24 @@ export async function rozdaj(talia, karta) {
     ], { duration: 520 + i * 36, easing: 'ease-in-out' });
   });
   pingMapy();
-  const lot = anim(karta, [
-    { transform: `translate(${dx}px, ${dy}px) scale(.42) rotate(-14deg)`, opacity: .0 },
-    { transform: `translate(${dx}px, ${dy}px) scale(.44) rotate(-22deg)`, opacity: .1, offset: .20 },
-    { transform: `translate(${dx * .5}px, ${dy * .55 - 40}px) scale(.72) rotate(10deg)`, opacity: 1, offset: .49 },
-    { transform: 'translate(0, -6px) scale(1.035) rotate(-1.2deg)', opacity: 1, offset: .82 },
-    { transform: 'none', opacity: 1 },
-  ], { duration: 760, easing: 'cubic-bezier(.23,.58,.27,1)' });
-  await czekaj(lot);
   const rama = karta.closest('.rama');
+  if (rama) {
+    anim(rama, [{ opacity: .72 }, { opacity: 1, offset: .32 }, { opacity: .86, offset: .73 }, { opacity: 1 }],
+      { duration: 790, easing: EASE_OUT });
+    rama.querySelectorAll('.rama-n').forEach((n, i) => anim(n, [
+      { scale: .64, opacity: .25 },
+      { scale: 1.45, opacity: 1, offset: .55 },
+      { scale: 1, opacity: 1 },
+    ], { duration: 380, delay: 120 + i * 45, easing: EASE_SPRING }));
+  }
+  const lot = anim(karta, [
+    { transform: `translate(${dx}px, ${dy}px) scale(.40) rotate(-16deg) rotateY(-65deg)`, opacity: .05 },
+    { transform: `translate(${dx + 14}px, ${dy - 25}px) scale(.53) rotate(-26deg) rotateY(36deg)`, opacity: .7, offset: .26 },
+    { transform: `translate(${dx * .45}px, ${dy * .47 - 42}px) scale(.75) rotate(10deg) rotateY(-17deg)`, opacity: 1, offset: .53 },
+    { transform: 'translate(0, -6px) scale(1.035) rotate(-1.2deg) rotateY(3deg)', opacity: 1, offset: .83 },
+    { transform: 'none', opacity: 1 },
+  ], { duration: 790, easing: 'cubic-bezier(.23,.58,.27,1)' });
+  await czekaj(lot);
   rama?.classList.add('zamkniete');
 }
 
@@ -211,7 +195,7 @@ export async function odkryj(karta, trud) {
   if (reduced || !rewers) return;
   anim(rewers, [
     { transform: 'none', opacity: 1 },
-    { transform: 'translate(46%, -4%) rotate(9deg)', opacity: 0 },
+    { transform: 'translate(43%, -6%) rotate(9deg) rotateY(64deg)', opacity: 0 },
   ], { duration: 180, easing: 'cubic-bezier(.5,0,.75,0)' });
   if (blysk) anim(blysk, [{ opacity: .95, transform: 'scale(.6)' }, { opacity: 0, transform: 'scale(1.6)' }], { duration: 520, easing: EASE_OUT });
   const fala = karta.querySelector('.fala');
@@ -235,6 +219,12 @@ export async function odkryj(karta, trud) {
   } else if (trud === 'trudny') {
     const pas = karta.querySelector('.pasy');
     if (pas) anim(pas, [{ transform: 'translateX(-100%)' }, { transform: 'translateX(0)' }], { duration: 320, easing: EASE_OUT });
+  } else if (trud === 'normalny' && fala) {
+    anim(fala, [{ opacity: .8, transform: 'scaleX(.2)' }, { opacity: 0, transform: 'scaleX(1.8)' }],
+      { duration: 470, easing: EASE_OUT });
+  } else if (trud === 'specjalna' && blysk) {
+    anim(blysk, [{ opacity: .95, transform: 'rotate(-25deg) scale(.4)' }, { opacity: 0, transform: 'rotate(23deg) scale(1.8)' }],
+      { duration: 720, easing: EASE_OUT });
   }
   const face = karta.querySelector('.karta');
   if (face) { face.classList.remove('polysk'); void face.offsetWidth; face.classList.add('polysk'); }
@@ -310,15 +300,6 @@ export function finalWejscie(kolumny, wiersze, tytul) {
     { duration: 240, delay: 160 + i * 70, easing: EASE_OUT, fill: 'backwards' }));
 }
 
-export function beben(el, n, opoznienie = 120) {
-  const tasma = el.querySelector('.beben-tasma');
-  if (!tasma) return;
-  tasma.style.transform = `translateY(${-n}em)`;
-  if (reduced || n === 0) return;
-  anim(tasma, [{ transform: 'translateY(0)' }, { transform: `translateY(${-n}em)` }],
-    { duration: 300 + n * 110, delay: opoznienie, easing: 'cubic-bezier(.2,.7,.2,1.08)', fill: 'backwards' });
-}
-
 // Konfetti: jednorazowa seria cząstek na canvasie, sama się sprząta.
 export function konfetti(kolory, zrodla = [[.5, .35]]) {
   if (reduced) return;
@@ -353,4 +334,21 @@ export function konfetti(kolory, zrodla = [[.5, .35]]) {
     requestAnimationFrame(krok);
   };
   requestAnimationFrame(krok);
+}
+
+// Publiczna wartość wyniku jest gotowa od razu; ruch licznika służy prezentacji.
+const zegary = new WeakMap();
+export function licznik(el, od, doWyniku) {
+  const poprzedni = zegary.get(el);
+  if (poprzedni) cancelAnimationFrame(poprzedni);
+  if (reduced || document.hidden || od === doWyniku) { el.textContent = doWyniku; return; }
+  const start = performance.now();
+  const krok = teraz => {
+    if (!el.isConnected) return;
+    const p = Math.min(1, (teraz - start) / 440);
+    el.textContent = Math.round(od + (doWyniku - od) * (1 - (1 - p) ** 3));
+    if (p < 1 && !document.hidden) zegary.set(el, requestAnimationFrame(krok));
+    else { el.textContent = doWyniku; zegary.delete(el); }
+  };
+  zegary.set(el, requestAnimationFrame(krok));
 }
