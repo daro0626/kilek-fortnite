@@ -360,3 +360,15 @@ html.ukryta .kolumna.na-szczycie::after { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .portal-cta .btn-glowny:is(:hover,:focus-visible)::after,.kolumna.na-szczycie::after { animation: none; }
 }
+
+.gra-sesja {
+  display: flex;
+  justify-content: flex-end;
+  width: min(100% - 32px, 600px);
+  margin: 8px auto 0;
+}
+.gra-sesja .btn { min-height: 44px; padding-inline: 16px; }
+@media (max-width: 585px) {
+  .portal-cta:has(#od-nowa:not([hidden])) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .portal-cta:has(#od-nowa:not([hidden])) .btn { min-width: 0; }
+}

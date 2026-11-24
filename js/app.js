@@ -110,6 +110,7 @@ const zaliczenia = i => S.rozegrane(stan).filter(r => r.wyniki[i] === 1).length;
 
 function renderHud() {
   const s = stan;
+  $('#gra-sesja').hidden = s.etap === 'start';
   hud.hidden = s.etap === 'start' || S.swobodny(s);
   if (hud.hidden) return;
   const przed = $$('[data-suma]', hud).map(el => +el.dataset.suma);
@@ -127,9 +128,9 @@ function renderHud() {
 
 // ---------------- START ----------------
 const formyGry = {
-  solo: ['Solo — gram sam', 'Jeden gracz i jeden wynik w turnieju.'],
-  seria: ['Pojedynek Solo — osobne mecze', 'Robicie tę samą misję w osobnych meczach Solo. Każdy zdobywa własne punkty.'],
-  duet: ['Duo — wspólny mecz', 'Gracie razem w Duo. Zespół zdobywa punkty raz.'],
+  solo: ['Solo', 'Grasz sam. Turniej zapisuje Twój wynik.'],
+  seria: ['Pojedynek Solo', 'Każdy gra osobny mecz Solo i zdobywa własne punkty.'],
+  duet: ['Duo', 'Gracie w jednym meczu. Punkty dostaje drużyna.'],
 };
 
 const formaGry = s => !S.swobodny(s) ? s.sposob : s.sklad === 'duo' ? 'duet' : 'solo';
@@ -137,7 +138,7 @@ let legendarnaNaStart = false;
 
 function widokStart() {
   return `<section class="widok widok-start wybor-start" data-widok="start">
-    <h1 class="gra-tytul" data-fokus tabindex="-1">Wyzwania</h1>
+    <h1 class="gra-tytul" data-fokus tabindex="-1">Nowa gra</h1>
     <div class="wybor-start-panel">
       <fieldset class="wybor-start-cel">
         <legend>Co chcesz zrobić?</legend>
@@ -212,7 +213,7 @@ function aktualizujStart(stary) {
   $('#startLegenda').hidden = !legendarnaNaStart;
   $('[data-pseudonim="1"]', root).hidden = forma === 'solo';
   $('#opisFormy').textContent = szybka
-    ? forma === 'duet' ? 'Jedna karta do wspólnego meczu.' : 'Jedna karta do meczu solo.'
+    ? forma === 'duet' ? 'Gracie razem w jednym meczu.' : 'Grasz sam w jednym meczu.'
     : formyGry[forma][1];
   $('[data-akcja="rozpocznij"]', root).textContent = szybka ? 'Losuj wyzwanie' : 'Rozpocznij turniej';
   if (stary && stary.trudnosc !== stan.trudnosc) fx.przebarwMape();
@@ -328,8 +329,7 @@ function ustawieniaStolu() {
   return `${stan.etap !== 'mecz' && !wLosowaniu ? wyborTrudnosciRundy() : ''}
     ${!wLosowaniu && S.mozeWybracSpecjalna(stan) ? '<button class="btn btn-drugi specjalna-przycisk" type="button" data-akcja="legendarna-wybierz">Wybierz „Wygraj bez broni” · 25 pkt</button>' : ''}
     ${stan.etap === 'karta' || stan.etap === 'mecz' ? `<details class="karta-opinia"><summary>Oceń misję</summary>${formularzOpinii(S.runda(stan).karta)}</details>` : ''}
-    ${S.swobodny(stan) ? '' : '<button class="btn btn-cichy" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>'}
-    <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Od nowa</button>`;
+    ${S.swobodny(stan) ? '' : '<button class="btn btn-cichy" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>'}`;
 }
 
 function aktualizujStol() {
@@ -408,7 +408,6 @@ function widokBrak() {
     <div class="akcje">
       ${wyborTrudnosciRundy()}
       <button class="btn btn-glowny" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>
-      <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Od nowa</button>
     </div>
   </section>`;
 }
@@ -451,7 +450,6 @@ function widokFinal() {
     ${stan.seria.koniec === 'wczesniej' ? `<p class="nota">Seria zakończona wcześniej: ${rundy.length}${napisLimitu(stan)} rund.</p>` : ''}
     <div class="akcje">
       <button class="btn btn-glowny btn-rewanz" type="button" data-akcja="rewanz">Rewanż</button>
-      <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Zmień graczy albo trudność</button>
     </div>
   </section>`;
 }
@@ -576,7 +574,7 @@ function potwierdz(btn, tekst) {
   return false;
 }
 
-function potwierdzZmiane(tytul, opis, akcja, przycisk = 'Potwierdź') {
+function potwierdzZmiane(tytul, opis, akcja, przycisk = 'Potwierdź', poZapisie) {
   const d = $('#potwierdz-serie');
   if (d.open) return;
   $('#potwierdz-tytul').textContent = tytul;
@@ -590,23 +588,7 @@ function potwierdzZmiane(tytul, opis, akcja, przycisk = 'Potwierdź') {
     ostatniaAkcja = null;
     faza = 'talia';
     ustaw(nastepny);
-  }, { once: true });
-  d.showModal();
-}
-
-function potwierdzZakonczenie(akcja) {
-  const d = $('#potwierdz-serie');
-  const ustawienia = akcja === 'konfiguracja';
-  $('#potwierdz-tytul').textContent = ustawienia ? 'Zacząć od nowa?' : 'Zakończyć serię?';
-  $('p', d).textContent = ustawienia
-    ? 'Bieżąca karta zostanie porzucona. Ukończone rundy zostaną w historii.'
-    : 'Podsumowanie zachowa ukończone rundy. Bieżąca runda zostanie zamknięta.';
-  $('button[value="reset"]', d).textContent = ustawienia ? 'Od nowa' : 'Zakończ serię';
-  d.returnValue = '';
-  d.addEventListener('close', () => {
-    if (d.returnValue !== 'reset') return;
-    faza = 'talia';
-    ustaw(ustawienia ? S.doKonfiguracji(stan) : S.zakonczWczesniej(stan));
+    poZapisie?.();
   }, { once: true });
   d.showModal();
 }
@@ -692,18 +674,18 @@ document.addEventListener('click', e => {
     }
     case 'zakoncz': {
       if (stan.etap === 'brak') ustaw(S.zakonczWczesniej(stan));
-      else potwierdzZakonczenie(a);
+      else potwierdzZmiane('Zakończyć serię?', 'Podsumowanie zachowa ukończone rundy. Bieżąca runda zostanie zamknięta.',
+        () => S.zakonczWczesniej(stan), 'Zakończ serię');
       break;
     }
     case 'od-nowa': {
-      potwierdzZmiane('Zacząć od nowa?', 'Przerwiesz bieżącą grę. Ukończone rundy pozostaną w historii.', () => {
-        const nowy = S.doKonfiguracji(stan);
-        location.hash = 'wyzwania';
-        return nowy;
-      }, 'Od nowa');
+      if (stan.etap === 'start') break;
+      const opis = stan.etap === 'final'
+        ? 'Otworzysz wybór nowej gry. Zapisany wynik i historia zostaną.'
+        : 'Przerwiesz bieżącą grę. Ukończone rundy i zdobyte w nich punkty zostaną w historii.';
+      potwierdzZmiane('Zacząć od nowa?', opis, () => S.doKonfiguracji(stan), 'Od nowa', () => przejdzDo('wyzwania'));
       break;
     }
-    case 'konfiguracja': potwierdzZakonczenie(a); break;
     case 'awatar': {
       const av = b.querySelector('.awatar');
       av.classList.remove('blysk-teraz'); void av.getBoundingClientRect(); av.classList.add('blysk-teraz');
