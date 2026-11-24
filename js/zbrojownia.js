@@ -46,11 +46,12 @@ function brakUjecia(s, typ) {
 function pokazZdjecie(root, s, w, typ, poprzedniObraz) {
   const foto = ujecie(s, w, typ);
   const pole = root.querySelector('#arsenal-foto');
+  pole.classList.toggle('arsenal-foto-brak', !foto);
   pole.innerHTML = foto
     ? `<button class="arsenal-powieksz" type="button" data-zoom aria-label="Powiększ obraz · ${s.nazwa}">
         <img src="assets/fortnite/${foto.plik}" width="${foto.rozmiar[0]}" height="${foto.rozmiar[1]}" alt="${s.nazwa}, ${etykietyUjec[typ]}" decoding="async" fetchpriority="high">
         <span>Powiększ</span></button>`
-    : `<div class="arsenal-brak"><p>${brakUjecia(s, typ)}</p></div>`;
+    : `<div class="arsenal-brak"><p>Nie mamy jeszcze zweryfikowanego zdjęcia tego przedmiotu.</p></div>`;
   if (foto && poprzedniObraz?.getAttribute('src') === 'assets/fortnite/' + foto.plik) {
     poprzedniObraz.loading = 'eager';
     pole.querySelector('img').replaceWith(poprzedniObraz);
@@ -137,6 +138,8 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
 
   function pokaz({s,w}) {
     aktualna = {s,w};
+    const dostepneUjecia = Object.entries(etykietyUjec).filter(([typ]) => Boolean(ujecie(s,w,typ)));
+    if (!dostepneUjecia.some(([typ]) => typ === typUjecia)) typUjecia = dostepneUjecia[0]?.[0] ?? 'render';
     const poprzedniObraz = pierwszyRender ? widok.querySelector('img[data-startowy][loading="eager"]') : null;
     pierwszyRender = false;
     widok.className = 'arsenal-widok rzad-' + w.rzadkosc;
@@ -145,8 +148,8 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
       <div><p class="arsenal-rzadkosc">${wariant(w)}</p><p class="arsenal-status">${statusy[w.status]}</p></div></header>
       <figure class="arsenal-galeria"><div id="arsenal-foto"></div>
       <figcaption id="arsenal-fotopis"></figcaption></figure>
-      <div class="arsenal-ujecia" role="group" aria-label="Widok przedmiotu">${Object.entries(etykietyUjec).map(([id,nazwa]) =>
-        `<button type="button" data-ujecie="${id}" aria-pressed="false">${nazwa}</button>`).join('')}</div>
+      ${dostepneUjecia.length > 1 ? `<div class="arsenal-ujecia" role="group" aria-label="Widok przedmiotu">${dostepneUjecia.map(([id,nazwa]) =>
+        `<button type="button" data-ujecie="${id}" aria-pressed="false">${nazwa}</button>`).join('')}</div>` : ''}
       <div class="arsenal-szczegoly">
         <label class="arsenal-wariant">Wariant i tryb
           <select id="arsenal-wariant">${para.filter(p => p.s === s && pasuje(p)).map(p =>
