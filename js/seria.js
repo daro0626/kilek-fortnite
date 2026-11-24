@@ -1,10 +1,10 @@
 import { MISJE, LEGENDARNA, PUNKTACJA, SKLADY, TRYBY, TRUDNOSCI, WERSJA_ZASAD, pula, misja } from './misje.js';
 import { LEGACY_OPISY } from './misje-legacy.js';
 
-export const WERSJA = 3;
+export const WERSJA = 4;
 export const RUNDY = 3;
 export const LIMITY_RUND = [3, 5, 10, 0];
-export const TRYBY_ZABAWY = ['seria', 'swobodny', 'duet'];
+export const TRYBY_ZABAWY = ['seria', 'swobodny', 'duet', 'solo'];
 export const ETAPY = ['start', 'odkrycie', 'karta', 'mecz', 'rozliczenie', 'brak', 'final'];
 const etapyKarty = ['odkrycie', 'karta', 'mecz', 'rozliczenie'];
 const kopia = s => JSON.parse(JSON.stringify(s));
@@ -12,7 +12,7 @@ const kopia = s => JSON.parse(JSON.stringify(s));
 export function nowyStan() {
   return {
     v: WERSJA, etap: 'start', gracze: ['Gracz 1', 'Gracz 2'], tryb: 'build',
-    sklad: 'solo', trudnosc: 'latwy', sposob: 'seria', limit: RUNDY, wymianyDowolne: false,
+    sklad: 'solo', trudnosc: 'latwy', sposob: 'swobodny', limit: RUNDY, wymianyDowolne: false,
     seria: null, ostatnia: null, historia: [],
   };
 }
@@ -24,7 +24,8 @@ export const runda = s => s.seria?.rundy.at(-1) ?? null;
 export const numerRundy = s => (s.seria?.rundy ?? []).filter(r => !r.uniewazniona).length;
 export const swobodny = s => s.sposob === 'swobodny';
 export const duet = s => s.sposob === 'duet';
-export const liczbaWynikow = s => duet(s) ? 1 : 2;
+export const solowy = s => s.sposob === 'solo';
+export const liczbaWynikow = s => duet(s) || solowy(s) ? 1 : 2;
 export const limitRund = s => s.seria?.limit ?? s.limit;
 export const ostatniaRunda = s => !!limitRund(s) && numerRundy(s) >= limitRund(s);
 export const misjaRundy = r => r?.opis ?? misja(r?.karta);
@@ -83,11 +84,18 @@ export function ustawOpcje(s, pole, wartosc) {
 export const ustawTryb = (s, tryb) => ustawOpcje(s, 'tryb', tryb);
 export const ustawTrudnosc = (s, trud) => ustawOpcje(s, 'trudnosc', trud);
 
+export function ustawFormat(s, sposob, skladSzybkiej = 'solo') {
+  if (s.etap !== 'start' || !TRYBY_ZABAWY.includes(sposob)) return s;
+  const sklad = sposob === 'duet' || (sposob === 'swobodny' && skladSzybkiej === 'duo') ? 'duo' : 'solo';
+  return s.sposob === sposob && s.sklad === sklad ? s : { ...s, sposob, sklad };
+}
+
 export function rozpocznij(s, sposob = s.sposob, specjalna = false) {
   if (!['start', 'final'].includes(s.etap) || !TRYBY_ZABAWY.includes(sposob)) return s;
   const n = kopia(s);
   n.sposob = sposob;
   if (duet(n)) n.sklad = 'duo';
+  if (solowy(n)) n.sklad = 'solo';
   n.gracze = n.gracze.map((_, i) => nazwaGracza(n, i));
   n.seria = { id: noweId(), rundy: [], pokazane: [], wymiana: false, koniec: null,
     limit: specjalna ? 1 : n.limit, legendarna: specjalna };
@@ -212,7 +220,7 @@ export function punkty(s) {
 
 export function zwyciezca(s) {
   const [a, b] = punkty(s);
-  return duet(s) || a === b ? null : a > b ? 0 : 1;
+  return liczbaWynikow(s) === 1 || a === b ? null : a > b ? 0 : 1;
 }
 
 function archiwizuj(s) {
@@ -268,7 +276,7 @@ function poprawnaRunda(r, s) {
 }
 
 function poprawneArchiwum(wpis) {
-  if (!wpis || typeof wpis.id !== 'string' || !['seria', 'duet'].includes(wpis.sposob) ||
+  if (!wpis || typeof wpis.id !== 'string' || !['seria', 'duet', 'solo'].includes(wpis.sposob) ||
       !Array.isArray(wpis.gracze) || wpis.gracze.length !== 2 || wpis.gracze.some(g => typeof g !== 'string')) return false;
   return Array.isArray(wpis.punkty) && wpis.punkty.length === liczbaWynikow(wpis) &&
     wpis.punkty.every(p => Number.isSafeInteger(p) && p >= 0) &&
@@ -298,14 +306,14 @@ function poprawOpisLegacy(r) {
 
 export function migruj(stary) {
   if (!stary || typeof stary !== 'object') return null;
-  if (stary.v === WERSJA) {
+  if (stary.v === 3 || stary.v === WERSJA) {
     if (!Array.isArray(stary.historia)) return stary;
     const historia = stary.historia.filter(poprawneArchiwum)
       .map(wpis => ({ ...wpis, rundy: wpis.rundy.map(poprawOpisLegacy) }));
     const seria = Array.isArray(stary.seria?.rundy)
       ? { ...stary.seria, rundy: stary.seria.rundy.map(poprawOpisLegacy) }
       : stary.seria;
-    return { ...stary, historia, seria };
+    return { ...stary, v: WERSJA, historia, seria };
   }
   if (stary.v === 1 || stary.v === 2) {
     const n = { ...nowyStan(), ...stary, v: WERSJA, historia: [], sposob: stary.sposob ?? 'seria' };

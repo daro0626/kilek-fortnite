@@ -2,7 +2,7 @@
 // KILEK CHALLENGE: interfejs. Stan → widok. Logika jest w seria.js.
 // =========================================================
 import * as S from './seria.js';
-import { TRYBY, TRUDNOSCI, SLOWNIK, PUNKTACJA, SKLADY, dostepna, pula, MIN_KART, trudnosc } from './misje.js';
+import { TRYBY, TRUDNOSCI, SLOWNIK, PUNKTACJA, SKLADY, trudnosc } from './misje.js';
 import { wczytaj, zapisz, wyczysc } from './zapis.js';
 import { INSYGNIA, IKONY, ODZNAKA, rewers, awatar } from './grafika.js';
 import { aktualizujPortal, przejdzDo, uruchomPortal } from './portal.js';
@@ -64,6 +64,7 @@ async function render(stary = null) {
   const poprzedni = ekran.firstElementChild;
   const poprzedniaKarta = $('.karta-wrap', ekran);
   const losujPoWymianie = ['wymien', 'uniewaznij'].includes(ostatniaAkcja);
+  const odRazu = S.swobodny(stan) && ['rozpocznij', 'graj-od-razu'].includes(ostatniaAkcja);
   const wymiana = losujPoWymianie || ostatniaAkcja === 'kolejna-swobodna';
   if (stary && poprzedni && !ekran.closest('[hidden]')) {
     poprzedni.inert = true;
@@ -72,9 +73,9 @@ async function render(stary = null) {
     if (!poprzedni.isConnected) return;
   }
   ekran.innerHTML = rysujWidok();
-  if (document.body.dataset.dzial !== 'wyzwania') return podlacz();
+  if (document.body.dataset.dzial !== 'wyzwania') return podlacz(odRazu ? stary : null, odRazu);
   scrollTo({ top: 0, behavior: 'instant' });
-  podlacz(stary, losujPoWymianie);
+  podlacz(stary, losujPoWymianie || odRazu);
   const f = $('[data-fokus]', ekran);
   if (stary && f) f.focus({ preventScroll: true });
 }
@@ -101,7 +102,7 @@ function aktualizuj(stary) {
 }
 
 // ---------------- HUD ----------------
-const indeksy = () => S.duet(stan) ? [0] : [0, 1];
+const indeksy = () => S.liczbaWynikow(stan) === 1 ? [0] : [0, 1];
 const nazwaWyniku = i => S.duet(stan) ? 'Duet' : stan.gracze[i];
 const napisLimitu = s => S.limitRund(s) ? ` z ${S.limitRund(s)}` : '';
 const cenaRundy = r => `${S.wartoscRundy(r)} pkt${r?.wersjaZasad === 0 ? ' · legacy' : ''}`;
@@ -125,97 +126,96 @@ function renderHud() {
 }
 
 // ---------------- START ----------------
+const formyGry = {
+  solo: ['Gram sam', 'Jeden gracz i jeden wynik w turnieju.'],
+  seria: ['Osobne mecze', 'Robicie tę samą misję osobno. Każdy zdobywa własne punkty.'],
+  duet: ['Jeden wspólny mecz', 'Robicie misję razem. Zespół zdobywa punkty raz.'],
+};
+
+const formaGry = s => !S.swobodny(s) ? s.sposob : s.sklad === 'duo' ? 'duet' : 'solo';
+let legendarnaNaStart = false;
+
 function widokStart() {
-  return `<section class="widok widok-start" data-widok="start">
+  return `<section class="widok widok-start wybor-start" data-widok="start">
     <h1 class="gra-tytul" data-fokus tabindex="-1">Wyzwania</h1>
-    <div id="konfiguracja" class="konfiguracja">${konfiguracja()}</div>
-    <div class="akcje-rzad wybor-zabawy">
-      <button class="btn btn-glowny" type="button" data-akcja="rozpocznij-swobodnie">Losuj swobodnie</button>
-      <button class="btn btn-drugi" type="button" data-akcja="rozpocznij">Rozpocznij serię</button>
-      <button class="btn btn-drugi" type="button" data-akcja="rozpocznij-duet">Wspólny duet</button>
-    </div>
-    <aside class="legendarna-promo">
-      <div><strong>Wygraj bez broni</strong><p>Legendarna · 25 pkt. Jedna wspólna karta. W pojedynku 25 pkt za osobne zaliczenie każdego gracza, w duecie razem 25 pkt za spełnienie warunków przez oboje.</p></div>
-      <div class="legendarna-akcje">
-        <button class="btn btn-drugi" type="button" data-akcja="legendarna-start">Wybierz pojedynek · 25 pkt</button>
-        <button class="btn btn-drugi" type="button" data-akcja="legendarna-duet">Wybierz duet · 25 pkt</button>
+    <div class="wybor-start-panel">
+      <fieldset class="wybor-start-cel">
+        <legend>Co chcesz zrobić?</legend>
+        <div class="wybor-start-kafelki">
+          ${[['swobodny', 'Szybkie wyzwanie', 'Karta do meczu. Bez punktów.'],
+            ['turniej', 'Turniej na punkty', 'Rundy, wyniki i finał.']].map(([id, nazwa, opis]) =>
+            `<label><input type="radio" name="cel-gry" value="${id}"><span><b>${nazwa}</b><small>${opis}</small></span></label>`).join('')}
+        </div>
+      </fieldset>
+      <div class="wybor-start-pola">
+        <label>Jak gracie?
+          <select name="forma-gry" aria-describedby="opisFormy">${Object.entries(formyGry).map(([id, [nazwa]]) => `<option value="${id}">${nazwa}</option>`).join('')}</select>
+        </label>
+        <label>Tryb Fortnite
+          <select name="tryb">${Object.values(TRYBY).map(tr => `<option value="${tr.id}">${tr.nazwa}</option>`).join('')}</select>
+        </label>
+        <label id="startPoziom">Trudność
+          <select name="trud" aria-describedby="opisFormy"></select>
+        </label>
+        <label id="startRundy">Liczba rund
+          <select name="limit">${S.LIMITY_RUND.map(n => `<option value="${n}">${n || 'Bez limitu'}</option>`).join('')}</select>
+        </label>
       </div>
-    </aside>
-    <p class="nota-zapisu" id="notaZapisu">${notaZapisu()}</p>
+      <p id="opisFormy" class="wybor-start-opis"></p>
+      <p id="startLegenda" class="wybor-start-legenda" hidden><strong>Wygraj bez broni · 25 pkt</strong> <button class="btn btn-cichy" type="button" data-akcja="anuluj-legendarna">Wróć do losowania</button></p>
+      <button class="btn btn-glowny wybor-start-cta" type="button" data-akcja="rozpocznij"></button>
+      <div class="wybor-start-dodatki">
+        <details id="startWiecej">
+          <summary>Więcej ustawień</summary>
+          <div class="gracze">
+            ${[0, 1].map(i => `<div class="plakietka p${i}" data-pseudonim="${i}">
+              <button class="awatar-btn" type="button" data-akcja="awatar" data-g="${i}" aria-label="Awatar gracza ${i + 1}">${awatar(stan.gracze[i], i)}</button>
+              <label class="plakietka-pole">
+                <input id="g${i}" class="pseudonim" value="${esc(stan.gracze[i])}" maxlength="16" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-label="Pseudonim gracza ${i + 1}">
+              </label>${IKONY.olowek}</div>`).join('')}
+          </div>
+          <label class="opcja-serii"><input type="checkbox" name="wymianyDowolne" ${stan.wymianyDowolne ? 'checked' : ''}> Dowolne wymiany w turnieju</label>
+        </details>
+        <details id="startSpecjalne">
+          <summary>Wybierz konkretną misję</summary>
+          <p>Wygraj bez podnoszenia broni i bez atakowania rywali. Za zaliczenie przysługuje 25 pkt.</p>
+          <button class="btn btn-cichy" type="button" data-akcja="zaznacz-legendarna">Wybierz „Wygraj bez broni”</button>
+        </details>
+      </div>
+    </div>
+    <p class="nota-zapisu" id="notaZapisu">${trwaly ? 'Postęp zapisuje się w tej przeglądarce.' : esc(tekstBrakuZapisu)}</p>
   </section>`;
 }
 
-function notaZapisu() {
-  return trwaly ? 'Wyniki zapisują się tylko w tej przeglądarce. Nic nie jest wysyłane.' : esc(tekstBrakuZapisu);
-}
-
-function konfiguracja() {
-  const s = stan;
-  const t = trudnosc(s.trudnosc);
-  const idx = TRUDNOSCI.findIndex(x => x.id === s.trudnosc);
-  return `
-    <div class="gracze">
-      ${[0, 1].map(i => `
-        <div class="plakietka p${i}">
-          <button class="awatar-btn" type="button" data-akcja="awatar" data-g="${i}" aria-label="Awatar gracza ${i + 1}">${awatar(s.gracze[i], i)}</button>
-          <label class="plakietka-pole">
-            <input id="g${i}" class="pseudonim" value="${esc(s.gracze[i])}" maxlength="16" autocomplete="off" spellcheck="false" enterkeyhint="done" aria-label="Pseudonim gracza ${i + 1}">
-          </label>
-          ${IKONY.olowek}
-        </div>`).join('<div class="vs" aria-hidden="true">VS</div>')}
-    </div>
-    <fieldset class="wybor-trybu">
-      <legend>Tryb meczu</legend>
-      <div class="tryby">
-      ${Object.values(TRYBY).map(tr => `
-        <label class="tryb dotyk">
-          <input type="radio" name="tryb" value="${tr.id}" ${s.tryb === tr.id ? 'checked' : ''}>
-          <span class="tryb-in">${IKONY[tr.id]}<span class="tryb-nazwa">${tr.nazwa}</span><span class="tryb-opis">${tr.opis}</span></span>
-        </label>`).join('')}
-      </div>
-    </fieldset>
-    <div class="ustaw-serie">
-      <label>Skład meczu <select name="sklad">${Object.entries(SKLADY).map(([id, nazwa]) => `<option value="${id}" ${s.sklad === id ? 'selected' : ''}>${nazwa}</option>`).join('')}</select></label>
-      <label>Liczba rund <select name="limit">${S.LIMITY_RUND.map(n => `<option value="${n}" ${s.limit === n ? 'selected' : ''}>${n || 'Bez limitu'}</option>`).join('')}</select></label>
-      <label class="opcja-serii"><input type="checkbox" name="wymianyDowolne" ${s.wymianyDowolne ? 'checked' : ''}> Dowolne wymiany w serii</label>
-    </div>
-    <fieldset class="wybor-trudnosci" style="--i:${idx}">
-      <legend>Trudność</legend>
-      <div class="trudnosci">
-        <span class="wskaznik" aria-hidden="true"></span>
-        ${TRUDNOSCI.map(d => {
-          const ok = dostepna(s.tryb, d.id, s.sklad);
-          return `<label class="trud dotyk t-${d.id}" data-t="${d.id}">
-            <input type="radio" name="trud" value="${d.id}" ${s.trudnosc === d.id ? 'checked' : ''} ${ok ? '' : 'disabled'}>
-            <span class="trud-in">${INSYGNIA[d.id]}<span class="trud-nazwa">${d.nazwa}</span><small>${PUNKTACJA[d.id]} pkt</small></span>
-          </label>`;
-        }).join('')}
-      </div>
-      <div class="trud-opis" id="trudOpis" aria-live="polite">${opisTrudnosci(t)}</div>
-    </fieldset>
-    <p class="zasada-proby">W pojedynku każdy osobno wykonuje tę samą misję. Wspólny duet ustawia tryb Duo i jeden wynik zespołu.</p>`;
-}
-
-function opisTrudnosci(t) {
-  const n = pula(stan.tryb, t.id, stan.sklad).length;
-  if (!dostepna(stan.tryb, t.id, stan.sklad)) return `<b>${t.kod}</b> Ta trudność ma w tym trybie za mało kart (${n} z ${MIN_KART}). Wybierz inną.`;
-  return `<span class="kod">${t.kod} · ${PUNKTACJA[t.id]} pkt</span><span>${t.opis}</span>`;
-}
-
 function aktualizujStart(stary) {
-  // po zmianie trybu dostępność trudności mogła się zmienić
-  const fs = $('.wybor-trudnosci');
-  if (!fs) return;
-  const idx = TRUDNOSCI.findIndex(x => x.id === stan.trudnosc);
-  fs.style.setProperty('--i', idx);
-  $$('input[name="trud"]').forEach(i => { i.checked = i.value === stan.trudnosc; i.disabled = !dostepna(stan.tryb, i.value, stan.sklad); });
-  $$('input[name="tryb"]').forEach(i => { i.checked = i.value === stan.tryb; });
-  $('#trudOpis').innerHTML = opisTrudnosci(trudnosc(stan.trudnosc));
-  if (stary && stary.trudnosc !== stan.trudnosc) {
-    fx.przebarwMape();
-    const ins = $(`.t-${stan.trudnosc} .ins`);
-    fx.podskok(ins);
+  const root = $('.wybor-start', ekran);
+  if (!root) return;
+  const szybka = S.swobodny(stan);
+  const forma = formaGry(stan);
+  const [formaPole, tryb, trud, limit] = $$('select', root);
+  $$('input[name="cel-gry"]', root).forEach(i => { i.checked = i.value === (szybka ? 'swobodny' : 'turniej'); });
+  formaPole.querySelector('[value="seria"]').hidden = szybka;
+  formaPole.querySelector('[value="seria"]').disabled = szybka;
+  formaPole.value = forma;
+  tryb.value = stan.tryb;
+  limit.value = stan.limit;
+  const znacznikOpcji = [szybka, stan.sklad, stan.tryb].join('/');
+  if (trud.dataset.opcje !== znacznikOpcji) {
+    const dostepne = S.dostepneTrudnosci(stan);
+    trud.replaceChildren(...dostepne.map(t => new Option(t.nazwa + (szybka ? '' : ` · ${PUNKTACJA[t.id]} pkt`), t.id)));
+    trud.dataset.opcje = znacznikOpcji;
   }
+  trud.value = stan.trudnosc;
+  $('#startPoziom').hidden = legendarnaNaStart;
+  $('#startRundy').hidden = szybka || legendarnaNaStart;
+  $('#startWiecej').hidden = szybka;
+  $('#startLegenda').hidden = !legendarnaNaStart;
+  $('[data-pseudonim="1"]', root).hidden = forma === 'solo';
+  $('#opisFormy').textContent = szybka
+    ? forma === 'duet' ? 'Jedna karta do wspólnego meczu.' : 'Jedna karta do meczu solo.'
+    : formyGry[forma][1];
+  $('[data-akcja="rozpocznij"]', root).textContent = szybka ? 'Losuj wyzwanie' : 'Rozpocznij turniej';
+  if (stary && stary.trudnosc !== stan.trudnosc) fx.przebarwMape();
 }
 
 // ---------------- STÓŁ: losowanie, karta, mecz ----------------
@@ -229,7 +229,7 @@ function kartaHTML(m, r) {
     <span class="naroznik n3" aria-hidden="true"></span><span class="naroznik n4" aria-hidden="true"></span>
     <header class="karta-gora">
       <span class="karta-trud">${INSYGNIA[trud] ?? ODZNAKA}<span>${t.nazwa}</span></span>
-      <span class="karta-meta"><span>${cenaRundy(r)} · ${esc(m.id)}</span><span>${TRYBY[stan.tryb].nazwa} · ${SKLADY[stan.sklad]}</span></span>
+      <span class="karta-meta"><span>${S.swobodny(stan) ? '' : cenaRundy(r) + ' · '}${esc(m.id)}</span><span>${TRYBY[stan.tryb].nazwa} · ${SKLADY[stan.sklad]}</span></span>
     </header>
     <div class="karta-tresc">
       <h2 class="karta-tytul" id="kartaTytul">${esc(m.tytul)}</h2>
@@ -253,9 +253,9 @@ function widokStol() {
   const nr = S.numerRundy(stan);
   return `<section class="widok widok-stol">
     <div class="stol-naglowek">
-      <h2 class="runda-tytul" data-fokus tabindex="-1">${S.swobodny(stan) ? 'Swobodne losowanie' : `Runda <b>${nr}</b><span>${napisLimitu(stan)}</span>`}</h2>
+      <h2 class="runda-tytul" data-fokus tabindex="-1">${S.swobodny(stan) ? 'Szybkie wyzwanie' : `Runda <b>${nr}</b><span>${napisLimitu(stan)}</span>`}</h2>
       <p class="stol-status" id="stolStatus">${statusStolu()}</p>
-      <span class="stol-stawka">${cenaRundy(r)} ${S.swobodny(stan) ? 'w rozgrywce punktowanej' : 'za zaliczenie'}</span>
+      ${S.swobodny(stan) ? '' : `<span class="stol-stawka">${cenaRundy(r)} za zaliczenie</span>`}
     </div>
     <div class="rama" data-faza="${faza}">
       <span class="rama-n r1"></span><span class="rama-n r2"></span><span class="rama-n r3"></span><span class="rama-n r4"></span>
@@ -279,7 +279,8 @@ function widokStol() {
 function statusStolu() {
   if (stan.etap === 'mecz') return 'Mecz trwa. Karta zostaje tutaj, wróćcie do niej w każdej chwili.';
   if (stan.etap === 'karta' && S.duet(stan)) return 'Jedna karta dla duetu. Zaznaczcie zaliczenie, gdy oboje spełnicie warunki, chyba że karta opisuje role zespołu.';
-  if (stan.etap === 'karta') return S.swobodny(stan) ? 'Możesz zagrać tę kartę albo wylosować następną.' : 'Ta sama karta obowiązuje obu graczy.';
+  if (stan.etap === 'karta' && S.swobodny(stan)) return 'Możesz zagrać tę kartę albo wylosować następną.';
+  if (stan.etap === 'karta') return S.solowy(stan) ? 'Zagraj kartę i wpisz wynik po meczu.' : 'Ta sama karta obowiązuje obu graczy.';
   if (faza === 'zakryta') return 'Karta czeka w ramce. Odkryjcie ją razem.';
   if (faza === 'rozdawanie') return 'Losuję…';
   return 'Karta jest już wylosowana i zapisana. Dotknijcie talii.';
@@ -288,10 +289,11 @@ function statusStolu() {
 function akcjeStolu() {
   const s = stan;
   if (s.etap === 'odkrycie') {
-    if (faza === 'zakryta') return `<button class="btn btn-glowny" type="button" data-akcja="odkryj">Odkryj kartę</button>`;
-    if (faza === 'rozdawanie' || faza === 'odkrywanie') return `<button class="btn btn-cichy" type="button" data-akcja="pomin">Odkryj od razu</button>`;
+    if (faza === 'zakryta') return `<button class="btn btn-glowny" type="button" data-akcja="odkryj">Odkryj kartę</button>
+      <button class="btn btn-cichy" type="button" data-akcja="pomin">Pomiń animację</button>`;
+    if (faza === 'rozdawanie' || faza === 'odkrywanie') return `<button class="btn btn-cichy" type="button" data-akcja="pomin">Pomiń animację</button>`;
     return `<button class="btn btn-glowny" type="button" data-akcja="losuj">Losuj kartę</button>
-      <button class="btn btn-cichy" type="button" data-akcja="pomin">Odkryj od razu</button>`;
+      <button class="btn btn-cichy" type="button" data-akcja="pomin">Pomiń animację</button>`;
   }
   if (S.swobodny(s)) return s.etap === 'mecz'
     ? '<button class="btn btn-glowny" type="button" data-akcja="kolejna-swobodna">Następna karta</button>'
@@ -317,7 +319,7 @@ function wyborTrudnosciRundy() {
   const dostepne = new Set(S.dostepneTrudnosci(stan).map(t => t.id));
   return `<label class="stol-trudnosc">Trudność przed losowaniem
     <select name="trud-rundy">
-      ${TRUDNOSCI.map(t => `<option value="${t.id}" ${t.id === stan.trudnosc ? 'selected' : ''} ${dostepne.has(t.id) ? '' : 'disabled'}>${t.nazwa} · ${PUNKTACJA[t.id]} pkt</option>`).join('')}
+      ${TRUDNOSCI.map(t => `<option value="${t.id}" ${t.id === stan.trudnosc ? 'selected' : ''} ${dostepne.has(t.id) ? '' : 'disabled'}>${t.nazwa}${S.swobodny(stan) ? '' : ` · ${PUNKTACJA[t.id]} pkt`}</option>`).join('')}
     </select></label>`;
 }
 
@@ -360,7 +362,7 @@ function widokRozliczenie() {
       ${INSYGNIA[r.trudnosc] ?? ODZNAKA}
       <div><p class="mini-tytul">${esc(m.tytul)} · ${cenaRundy(r)}</p><p class="mini-zal"><b>Zaliczasz, gdy:</b> ${esc(m.zaliczenie)}</p></div>
     </div>
-    <p class="uczciwie">${S.duet(stan) ? 'Potwierdźcie jeden wynik zespołu. Zaliczenie daje punkty raz, dla całego duetu.' : 'Każdy potwierdza swój wynik ręcznie. Oboje możecie zaliczyć tę samą kartę.'}</p>
+    <p class="uczciwie">${S.duet(stan) ? 'Potwierdźcie jeden wynik zespołu. Zaliczenie daje punkty raz, dla całego duetu.' : S.solowy(stan) ? 'Potwierdź swój wynik po meczu.' : 'Każdy potwierdza swój wynik ręcznie. Oboje możecie zaliczyć tę samą kartę.'}</p>
     <div class="panele">${indeksy().map(panelGracza).join('')}</div>
     <div class="akcje">
       <button class="btn btn-glowny" type="button" data-akcja="zatwierdz" ${S.gotowe(stan) ? '' : 'disabled'}>${ost ? 'Zatwierdź i zobacz finał' : `Zatwierdź rundę ${nr}`}</button>
@@ -415,7 +417,8 @@ function widokBrak() {
 function tytulFinalu() {
   const z = S.zwyciezca(stan);
   if (!S.rozegrane(stan).length) return 'Seria bez wyniku';
-  if (S.duet(stan)) return 'Wynik duetu';
+  if (S.duet(stan)) return 'Wynik drużyny';
+  if (S.solowy(stan)) return 'Wynik solo';
   return z === null ? 'Remis!' : `Wygrywa ${esc(stan.gracze[z])}!`;
 }
 
@@ -426,7 +429,7 @@ function widokFinal() {
   const wynik = z === null ? 'remis' : String(z);
   return `<section class="widok widok-final" data-wynik="${wynik}">
     <h2 class="final-tytul" data-fokus tabindex="-1" id="finalTytul">${tytulFinalu()}</h2>
-    <div class="podium ${S.duet(stan) ? 'podium-duet' : ''}">
+    <div class="podium ${S.liczbaWynikow(stan) === 1 ? 'podium-duet' : ''}">
       <div class="reflektor" aria-hidden="true"></div>
       ${indeksy().map(i => `
         <div class="kolumna p${i} ${z === i || (z === null && rundy.length) ? 'na-szczycie' : ''}">
@@ -490,6 +493,7 @@ function aktualizujFinal() {
 function podlacz(stary, losujPoWymianie) {
   const w = widok(stan);
   if (w === 'start') {
+    aktualizujStart();
     if (stary) fx.wejscie($$('.widok-start > *'), 35);
     return;
   }
@@ -539,20 +543,20 @@ async function odkryjTeraz(bezAnimacji = false) {
   const nowy = S.odkryj(stan);
   stan = nowy; if (trwaly && !zapisz(stan)) { trwaly = false; pokazKomunikat(tekstBrakuZapisu); }
   const karta = $('#kartaWrap');
-  const anim = bezAnimacji || fx.reduced ? null : fx.odkryj(karta, S.runda(stan).trudnosc);
-  faza = 'odkryta';
+  const anim = bezAnimacji || fx.reduced || document.hidden ? null : fx.odkryj(karta, S.runda(stan).trudnosc);
   await anim;
   if (stan !== nowy) return;
+  faza = 'odkryta';
   motyw(); renderHud(); aktualizujStol(); aktualizujPortal(stan);
   const m = S.misjaRundy(S.runda(stan));
   oglos(`Misja ${m.tytul}. ${m.cel} Od kiedy: ${m.odKiedy} Zaliczasz, gdy: ${m.zaliczenie}`);
   $('#kartaTytul')?.setAttribute('tabindex', '-1');
-  $('#kartaTytul')?.focus({ preventScroll: true });
+  if (document.body.dataset.dzial === 'wyzwania') $('#kartaTytul')?.focus({ preventScroll: true });
 }
 
 function pomin() {
   pominiecie = true;
-  if (faza === 'rozdawanie') { fx.dokoncz(); return; }
+  if (faza === 'rozdawanie' || faza === 'odkrywanie') { fx.dokoncz(); return; }
   if (faza === 'talia' || faza === 'zakryta') odkryjTeraz(true);
 }
 
@@ -613,18 +617,38 @@ document.addEventListener('click', e => {
   const a = b.dataset.akcja;
   ostatniaAkcja = a;
   switch (a) {
-    case 'legendarna-start':
-    case 'legendarna-duet': faza = 'talia'; ustaw(S.rozpocznij(stan, a === 'legendarna-duet' ? 'duet' : 'seria', true)); break;
+    case 'zaznacz-legendarna': {
+      if (stan.etap !== 'start') {
+        pokazKomunikat('Rozgrywka trwa. Dokończ ją albo wybierz misję specjalną przed następnym losowaniem.');
+        przejdzDo('wyzwania');
+        break;
+      }
+      legendarnaNaStart = true;
+      const n = S.swobodny(stan) ? S.ustawFormat(stan, formaGry(stan)) : stan;
+      if (!ustaw(n)) aktualizujStart();
+      przejdzDo('wyzwania');
+      $('#startSpecjalne').open = false;
+      $('[data-akcja="rozpocznij"]')?.focus();
+      break;
+    }
+    case 'anuluj-legendarna': {
+      legendarnaNaStart = false;
+      aktualizujStart();
+      $('[data-akcja="rozpocznij"]')?.focus();
+      break;
+    }
     case 'legendarna-wybierz': {
       potwierdzZmiane('Wybrać misję legendarną?', 'Bieżącą kartę zastąpi „Wygraj bez broni” za 25 pkt. Rozegrane rundy zostają.', () => S.wybierzSpecjalna(stan));
       break;
     }
-    case 'rozpocznij-duet': faza = 'talia'; ustaw(S.rozpocznij(stan, 'duet')); break;
-    case 'rozpocznij': faza = 'talia'; ustaw(S.rozpocznij(stan, 'seria')); break;
-    case 'rozpocznij-swobodnie':
+    case 'rozpocznij': {
+      faza = 'talia';
+      if (ustaw(S.rozpocznij(stan, stan.sposob, legendarnaNaStart))) legendarnaNaStart = false;
+      break;
+    }
     case 'graj-od-razu': {
       faza = 'talia';
-      if (ustaw(S.rozpocznij(stan, 'swobodny')) && a === 'graj-od-razu') przejdzDo('wyzwania');
+      if (ustaw(S.rozpocznij(S.ustawFormat(stan, 'swobodny'), 'swobodny'))) przejdzDo('wyzwania');
       break;
     }
     case 'rewanz': faza = 'talia'; ustaw(S.rewanz(stan)); break;
@@ -683,9 +707,19 @@ document.addEventListener('click', e => {
 
 document.addEventListener('change', e => {
   const t = e.target;
+  if (t.name === 'cel-gry') {
+    if (t.value === 'swobodny') legendarnaNaStart = false;
+    const forma = formaGry(stan);
+    ustaw(t.value === 'swobodny'
+      ? S.ustawFormat(stan, 'swobodny', forma === 'duet' ? 'duo' : 'solo')
+      : S.ustawFormat(stan, forma === 'duet' ? 'duet' : 'solo'));
+  }
+  if (t.name === 'forma-gry') {
+    ustaw(S.swobodny(stan) ? S.ustawFormat(stan, 'swobodny', t.value === 'duet' ? 'duo' : 'solo') : S.ustawFormat(stan, t.value));
+  }
   if (t.name === 'tryb') ustaw(S.ustawTryb(stan, t.value));
   if (t.name === 'trud') ustaw(S.ustawTrudnosc(stan, t.value));
-  if (['sklad', 'limit', 'wymianyDowolne'].includes(t.name)) {
+  if (['limit', 'wymianyDowolne'].includes(t.name)) {
     ustaw(S.ustawOpcje(stan, t.name, t.type === 'checkbox' ? t.checked : t.name === 'limit' ? +t.value : t.value));
   }
   if (t.name === 'trud-rundy') {
@@ -741,9 +775,9 @@ function otworzInfo() {
       </div>
       <div class="zakladka-panel" role="tabpanel" id="zp1" aria-labelledby="zk1" tabindex="0">
         <ol class="kroki">
-          <li>Wpiszcie pseudonimy. Wybierzcie tryb i trudność.</li>
-          <li>Losujcie kartę. Jedna karta obowiązuje obu graczy.</li>
-          <li>W pojedynku każdy osobno wykonuje tę samą misję. Wspólny duet ustawia tryb Duo i jeden wynik zespołu.</li>
+          <li>Wybierz szybkie wyzwanie bez punktów lub turniej na punkty.</li>
+          <li>Wybierz granie solo, osobne mecze lub wspólny mecz.</li>
+          <li>W osobnych meczach każdy zdobywa własne punkty za to samo zadanie. Wspólny mecz daje jeden wynik dla drużyny.</li>
           <li>Po meczu każdy zaznacza swój wynik. Zaliczenie daje 1, 3, 5, 7 lub 10 pkt według trudności. Brak zaliczenia daje 0.</li>
           <li>Wybierz 3, 5, 10 rund albo serię bez limitu. Możesz zakończyć serię i zobaczyć wynik w dowolnej chwili.</li>
         </ol>
@@ -801,7 +835,10 @@ function otworzInfo() {
 // ---------------------------------------------------------
 fx.reakcjaDotyku(document);
 fx.paralaksa();
-document.addEventListener('visibilitychange', () => document.documentElement.classList.toggle('ukryta', document.hidden));
+document.addEventListener('visibilitychange', () => {
+  document.documentElement.classList.toggle('ukryta', document.hidden);
+  if (document.hidden) fx.dokoncz();
+});
 
 podlaczOpinie();
 uruchomPortal(() => stan);
