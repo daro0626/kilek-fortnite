@@ -138,7 +138,32 @@
   <section class="portal-wrap dzial-portal" data-dzial="zbrojownia" aria-labelledby="zbrojownia-tytul" hidden>
     <header class="dzial-naglowek arsenal-naglowek"><p>PRZEDMIOTY Z FORTNITE</p><h1 id="zbrojownia-tytul" data-portal-fokus tabindex="-1">Zbrojownia</h1>
       <div>Rozpoznaj przedmioty z Łowców Skarbów i porównaj konkretne warianty.</div></header>
-    <div id="arsenal-root"></div>
+    <div id="arsenal-root">
+      <form class="arsenal-filtry" aria-label="Filtry Zbrojowni">
+        <label>Okres<select name="okres"><option value="sezon">Aktualny sezon</option><option value="archiwum">Archiwum</option></select></label>
+        <label>Rodzaj sprzętu<select name="typ"><option value="">Wszystkie rodzaje</option></select></label>
+        <label>Tryb gry<select name="playlista"><option value="">Wszystkie tryby</option></select></label>
+        <label>Rzadkość<select name="rzadkosc"><option value="">Wszystkie rzadkości</option></select></label>
+      </form>
+      <div class="arsenal-uklad">
+        <article id="arsenal-widok" class="arsenal-widok rzad-rzadka">
+          <header class="arsenal-gora">
+            <div><p class="znacznik">Pistolet · Łowcy Skarbów · odczyt puli 23.11</p>
+              <h2>Pistolet krzemieniowy</h2><p class="arsenal-oryginal">Flint-Knock Pistol</p></div>
+            <div><p class="arsenal-rzadkosc">Rzadka</p><p class="arsenal-status">Potwierdzone</p></div>
+          </header>
+          <figure class="arsenal-galeria">
+            <div id="arsenal-foto"><img data-startowy width="1000" height="640" loading="lazy" fetchpriority="high" decoding="async" src="assets/fortnite/flint-render.webp" alt="Pistolet krzemieniowy, Render Epic"></div>
+            <figcaption id="arsenal-fotopis">Oficjalny render promocyjny z premiery v8.11. <a href="https://www.fortnite.com/news/patch-notes-v8-11">Epic · render v8.11</a></figcaption>
+          </figure>
+        </article>
+        <nav class="arsenal-lista" aria-label="Przedmioty">
+          <h2>Wybierz przedmiot</h2><p class="nota" id="arsenal-licznik" role="status"></p>
+          <div id="arsenal-karty"></div>
+        </nav>
+      </div>
+      <div id="arsenal-dodatki"></div>
+    </div>
   </section>
   <section class="portal-wrap dzial-portal" data-dzial="akademia" aria-labelledby="akademia-tytul" hidden>
     <header class="dzial-naglowek"><p>PLAN TRENINGOWY</p><h1 id="akademia-tytul" data-portal-fokus tabindex="-1">Akademia</h1>
@@ -171,10 +196,12 @@
   </section>
 </main>
 <script>
-  if (location.hash === '#aktualnie') {
-    document.querySelector('#sezon-widok picture img').loading = 'eager';
+  const landing = location.hash.slice(1);
+  const obraz = landing === 'aktualnie' ? '#sezon-widok picture img' : landing === 'zbrojownia' ? '#arsenal-foto img' : '';
+  if (obraz) {
+    document.querySelector(obraz).loading = 'eager';
     document.querySelector('main [data-dzial=start]').hidden = true;
-    document.querySelector('main [data-dzial=aktualnie]').hidden = false;
+    document.querySelector('main [data-dzial=' + landing + ']').hidden = false;
   }
 </script>
 <script type="module">

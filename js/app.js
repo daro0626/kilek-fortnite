@@ -643,7 +643,8 @@ document.addEventListener('click', e => {
     }
     case 'rozpocznij': {
       faza = 'talia';
-      if (ustaw(S.rozpocznij(stan, stan.sposob, legendarnaNaStart))) legendarnaNaStart = false;
+      const konfiguracja = S.ustawFormat(stan, stan.sposob, stan.sklad);
+      if (ustaw(S.rozpocznij(konfiguracja, konfiguracja.sposob, legendarnaNaStart))) legendarnaNaStart = false;
       break;
     }
     case 'graj-od-razu': {

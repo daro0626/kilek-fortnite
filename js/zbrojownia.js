@@ -43,7 +43,7 @@ function brakUjecia(s, typ) {
   return 'Brak potwierdzonego ujęcia z materiałów, które można tu opublikować.';
 }
 
-function pokazZdjecie(root, s, w, typ) {
+function pokazZdjecie(root, s, w, typ, poprzedniObraz) {
   const foto = ujecie(s, w, typ);
   const pole = root.querySelector('#arsenal-foto');
   pole.innerHTML = foto
@@ -51,6 +51,10 @@ function pokazZdjecie(root, s, w, typ) {
         <img src="assets/fortnite/${foto.plik}" width="${foto.rozmiar[0]}" height="${foto.rozmiar[1]}" alt="${s.nazwa}, ${etykietyUjec[typ]}" decoding="async" fetchpriority="high">
         <span>Powiększ</span></button>`
     : `<div class="arsenal-brak"><p>${brakUjecia(s, typ)}</p></div>`;
+  if (foto && poprzedniObraz?.getAttribute('src') === 'assets/fortnite/' + foto.plik) {
+    poprzedniObraz.loading = 'eager';
+    pole.querySelector('img').replaceWith(poprzedniObraz);
+  }
   root.querySelector('#arsenal-fotopis').innerHTML = foto
     ? `${foto.podpis} ${zrodlo(ZRODLA_SPRZETU[foto.zrodlo], nazwyZrodel[foto.zrodlo])}`
     : 'Źródła dla przedmiotu podano poniżej.';
@@ -105,19 +109,7 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
     return;
   }
   const typy = Object.fromEntries([...new Set(SPRZET.map(s => s.typ))].map(n => [n,n]));
-  root.innerHTML = `<form class="arsenal-filtry" aria-label="Filtry Zbrojowni">
-    <label>Okres<select name="okres"><option value="sezon">Aktualny sezon</option><option value="archiwum">Archiwum</option></select></label>
-    <label>Rodzaj sprzętu<select name="typ">${opcje(typy, 'Wszystkie rodzaje')}</select></label>
-    <label>Tryb gry<select name="playlista">${opcje(PLAYLISTY, 'Wszystkie tryby')}</select></label>
-    <label>Rzadkość<select name="rzadkosc">${opcje(RZADKOSCI, 'Wszystkie rzadkości')}</select></label>
-  </form>
-  <div class="arsenal-uklad">
-    <article id="arsenal-widok" class="arsenal-widok"></article>
-    <nav class="arsenal-lista" aria-label="Przedmioty">
-      <h2>Wybierz przedmiot</h2><p class="nota" id="arsenal-licznik" role="status"></p>
-      <div id="arsenal-karty"></div>
-    </nav>
-  </div>
+  root.querySelector('#arsenal-dodatki').innerHTML = `
   <section class="arsenal-porownaj wiedza-panel">
     <h2>Porównaj warianty</h2>
     <div class="arsenal-pary">${['Pierwszy wariant','Drugi wariant'].map(n =>
@@ -131,16 +123,22 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
   const znajdz = s => root.querySelector(s);
   const filtry = znajdz('form');
   const [okres, typ, playlista, rzadkosc] = [...filtry.querySelectorAll('select')];
+  typ.innerHTML = opcje(typy, 'Wszystkie rodzaje');
+  playlista.innerHTML = opcje(PLAYLISTY, 'Wszystkie tryby');
+  rzadkosc.innerHTML = opcje(RZADKOSCI, 'Wszystkie rzadkości');
   const lista = znajdz('#arsenal-karty');
   const widok = znajdz('#arsenal-widok');
   const dialog = znajdz('dialog');
   let aktualna = para.find(p => klucz(p) === 'flint/br-rzadka'), typUjecia = 'render', foto;
+  let pierwszyRender = true;
   const pasuje = ({s,w}) => (w.status === 'archiwum') === (okres.value === 'archiwum') &&
     (!typ.value || s.typ === typ.value) && (!playlista.value || w.tryby.includes(playlista.value)) &&
     (!rzadkosc.value || w.rzadkosc === rzadkosc.value);
 
   function pokaz({s,w}) {
     aktualna = {s,w};
+    const poprzedniObraz = pierwszyRender ? widok.querySelector('img[data-startowy][loading="eager"]') : null;
+    pierwszyRender = false;
     widok.className = 'arsenal-widok rzad-' + w.rzadkosc;
     widok.innerHTML = `<header class="arsenal-gora"><div><p class="znacznik">${s.typ} · ${w.wersja}</p>
       <h2 tabindex="-1">${s.nazwa}</h2><p class="arsenal-oryginal">${s.oryginal}</p></div>
@@ -161,7 +159,7 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
           <div><dt>Ograniczenie</dt><dd>${s.ograniczenia}</dd></div><div><dt>Jak używać</dt><dd>${s.wskazowka}</dd></div></dl>
         <p class="arsenal-zrodla">${s.oficjalne.map(z => zrodlo(ZRODLA_SPRZETU[z], nazwyZrodel[z])).join(' · ')}</p>
       </div>`;
-    foto = pokazZdjecie(root,s,w,typUjecia);
+    foto = pokazZdjecie(root,s,w,typUjecia,poprzedniObraz);
   }
   function odswiez() {
     const pasujace = para.filter(pasuje);
