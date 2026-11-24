@@ -127,9 +127,9 @@ function renderHud() {
 
 // ---------------- START ----------------
 const formyGry = {
-  solo: ['Gram sam', 'Jeden gracz i jeden wynik w turnieju.'],
-  seria: ['Osobne mecze', 'Robicie tę samą misję osobno. Każdy zdobywa własne punkty.'],
-  duet: ['Jeden wspólny mecz', 'Robicie misję razem. Zespół zdobywa punkty raz.'],
+  solo: ['Solo — gram sam', 'Jeden gracz i jeden wynik w turnieju.'],
+  seria: ['Pojedynek Solo — osobne mecze', 'Robicie tę samą misję w osobnych meczach Solo. Każdy zdobywa własne punkty.'],
+  duet: ['Duo — wspólny mecz', 'Gracie razem w Duo. Zespół zdobywa punkty raz.'],
 };
 
 const formaGry = s => !S.swobodny(s) ? s.sposob : s.sklad === 'duo' ? 'duet' : 'solo';
@@ -148,10 +148,10 @@ function widokStart() {
         </div>
       </fieldset>
       <div class="wybor-start-pola">
-        <label>Jak gracie?
+        <label>Tryb gry
           <select name="forma-gry" aria-describedby="opisFormy">${Object.entries(formyGry).map(([id, [nazwa]]) => `<option value="${id}">${nazwa}</option>`).join('')}</select>
         </label>
-        <label>Tryb Fortnite
+        <label>Budowanie
           <select name="tryb">${Object.values(TRYBY).map(tr => `<option value="${tr.id}">${tr.nazwa}</option>`).join('')}</select>
         </label>
         <label id="startPoziom">Trudność
@@ -329,7 +329,7 @@ function ustawieniaStolu() {
     ${!wLosowaniu && S.mozeWybracSpecjalna(stan) ? '<button class="btn btn-drugi specjalna-przycisk" type="button" data-akcja="legendarna-wybierz">Wybierz „Wygraj bez broni” · 25 pkt</button>' : ''}
     ${stan.etap === 'karta' || stan.etap === 'mecz' ? `<details class="karta-opinia"><summary>Oceń misję</summary>${formularzOpinii(S.runda(stan).karta)}</details>` : ''}
     ${S.swobodny(stan) ? '' : '<button class="btn btn-cichy" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>'}
-    <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Wróć do ustawień</button>`;
+    <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Od nowa</button>`;
 }
 
 function aktualizujStol() {
@@ -408,7 +408,7 @@ function widokBrak() {
     <div class="akcje">
       ${wyborTrudnosciRundy()}
       <button class="btn btn-glowny" type="button" data-akcja="zakoncz">Zakończ serię i zobacz wynik</button>
-      <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Wróć do ustawień</button>
+      <button class="btn btn-cichy" type="button" data-akcja="konfiguracja">Od nowa</button>
     </div>
   </section>`;
 }
@@ -597,11 +597,11 @@ function potwierdzZmiane(tytul, opis, akcja, przycisk = 'Potwierdź') {
 function potwierdzZakonczenie(akcja) {
   const d = $('#potwierdz-serie');
   const ustawienia = akcja === 'konfiguracja';
-  $('#potwierdz-tytul').textContent = ustawienia ? 'Wrócić do ustawień?' : 'Zakończyć serię?';
+  $('#potwierdz-tytul').textContent = ustawienia ? 'Zacząć od nowa?' : 'Zakończyć serię?';
   $('p', d).textContent = ustawienia
     ? 'Bieżąca karta zostanie porzucona. Ukończone rundy zostaną w historii.'
     : 'Podsumowanie zachowa ukończone rundy. Bieżąca runda zostanie zamknięta.';
-  $('button[value="reset"]', d).textContent = ustawienia ? 'Wróć do ustawień' : 'Zakończ serię';
+  $('button[value="reset"]', d).textContent = ustawienia ? 'Od nowa' : 'Zakończ serię';
   d.returnValue = '';
   d.addEventListener('close', () => {
     if (d.returnValue !== 'reset') return;
@@ -693,6 +693,14 @@ document.addEventListener('click', e => {
     case 'zakoncz': {
       if (stan.etap === 'brak') ustaw(S.zakonczWczesniej(stan));
       else potwierdzZakonczenie(a);
+      break;
+    }
+    case 'od-nowa': {
+      potwierdzZmiane('Zacząć od nowa?', 'Przerwiesz bieżącą grę. Ukończone rundy pozostaną w historii.', () => {
+        const nowy = S.doKonfiguracji(stan);
+        location.hash = 'wyzwania';
+        return nowy;
+      }, 'Od nowa');
       break;
     }
     case 'konfiguracja': potwierdzZakonczenie(a); break;
