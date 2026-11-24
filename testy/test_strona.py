@@ -608,6 +608,33 @@ def migracja_legacy_w_ui(browser):
     ok('migracja legacy, potwierdzenie porzucenia i punktacja następnej rundy')
 
 
+def od_nowa_i_tryb_gry(browser):
+    """Nowa gra musi być osiągalna z ekranu Start bez szukania ukrytego resetu."""
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
+    page, bledy = strona(ctx)
+    page.goto(URL + '#wyzwania')
+    expect(page.get_by_text('Tryb gry', exact=True)).to_be_visible()
+    nazwy = page.locator('select[name=forma-gry]').inner_text()
+    assert 'Solo' in nazwy and 'Duo' in nazwy, nazwy
+    expect(page.get_by_text('Budowanie', exact=True)).to_be_visible()
+    klik(page, '[data-akcja=rozpocznij]', True)
+    dzial(page, 'start', True)
+    expect(page.locator('#kontynuuj')).to_be_visible()
+    expect(page.locator('#od-nowa')).to_be_visible()
+    page.reload()
+    expect(page.locator('#od-nowa')).to_be_visible()
+    klik(page, '#od-nowa', True)
+    expect(page.locator('#potwierdz-serie')).to_be_visible()
+    expect(page.locator('#potwierdz-tytul')).to_have_text('Zacząć od nowa?')
+    klik(page, '#potwierdz-serie button[value=reset]', True)
+    expect(page.locator('[data-akcja=rozpocznij]')).to_be_visible()
+    assert etap(page) == 'start'
+    assert page.evaluate('location.hash') == '#wyzwania'
+    assert not bledy, bledy
+    ctx.close()
+    ok('widoczne Od nowa z potwierdzeniem i nazwy Solo/Duo na telefonie')
+
+
 if __name__ == '__main__':
     with sync_playwright() as pw:
         browser = pw.chromium.launch(executable_path=os.getenv('CHROMIUM_PATH'), args=['--enable-unsafe-swiftshader'])
@@ -624,6 +651,7 @@ if __name__ == '__main__':
         dzialy_i_opinie(browser)
         migracja_legacy_w_ui(browser)
         szybki_start_i_turniej_solo(browser)
+        od_nowa_i_tryb_gry(browser)
         browser.close()
     print(f'\n{len(wyniki)} testów przeglądarkowych: OK')
     sys.exit(0)
