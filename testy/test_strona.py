@@ -610,6 +610,49 @@ def migracja_legacy_w_ui(browser):
     ok('migracja legacy, potwierdzenie porzucenia i punktacja następnej rundy')
 
 
+def zbrojownia_zrodla_i_rzadkosci(browser):
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
+    page, bledy = strona(ctx)
+    page.goto(URL + '#zbrojownia')
+    obrazy = page.locator('.arsenal-grupa').filter(has=page.get_by_role('heading', name='Z obrazem'))
+    opisy = page.locator('.arsenal-grupa').filter(has=page.get_by_role('heading', name='Opisy bez zdjęć'))
+    expect(obrazy.locator('a img')).to_have_count(3)
+    expect(opisy.locator('a')).to_have_count(4)
+    expect(opisy.locator('img')).to_have_count(0)
+
+    for id in ('flint', 'hammer', 'flapjack'):
+        page.goto(URL + '#zbrojownia/' + id)
+        expect(page.locator('#arsenal-foto img')).to_have_attribute('src', f'assets/fortnite/{id}-render.webp')
+        page.locator('#arsenal-foto img').evaluate('(img) => img.decode()')
+        expect(page.locator('#arsenal-fotopis')).to_contain_text('Render referencyjny')
+        expect(page.locator('#arsenal-fotopis a')).to_have_attribute('href', re.compile(r'https://www\.fortnite\.com/'))
+        expect(page.locator('[data-ujecie]')).to_have_count(0)
+
+    page.goto(URL + '#zbrojownia/hammer/br-rzadka')
+    pole = page.locator('#arsenal-wariant')
+    etykieta = page.locator('.arsenal-gora .arsenal-rzadkosc')
+    kolory = []
+    for id, nazwa in [('rzadka', 'Rzadka'), ('epicka', 'Epicka'), ('legendarna', 'Legendarna')]:
+        pole.select_option('hammer/br-' + id)
+        expect(etykieta).to_have_text(nazwa)
+        expect(page.locator('#arsenal-foto img')).to_have_attribute('src', 'assets/fortnite/hammer-render.webp')
+        expect(page.locator('.arsenal-karta[aria-current=true]')).to_have_class(re.compile('rzad-' + id))
+        kolor = etykieta.evaluate('(el) => getComputedStyle(el).color')
+        assert kolor == page.locator('.arsenal-gora').evaluate('(el) => getComputedStyle(el).borderBottomColor')
+        kolory.append(kolor)
+        bez_przewijania_w_bok(page, 'rzadkość ' + id)
+    assert len(set(kolory)) == 3, kolory
+
+    page.goto(URL + '#zbrojownia/usopp/blitz-legendarna')
+    expect(page.locator('#arsenal-widok h2')).to_have_text('Wyścigówa Usoppa')
+    expect(page.locator('.arsenal-bez-zdjecia')).to_be_visible()
+    expect(page.locator('#arsenal-foto, [data-ujecie], [data-zoom]')).to_have_count(0)
+    expect(page.locator('.arsenal-stan')).to_contain_text('Blitz Royale')
+    assert not bledy, bledy
+    ctx.close()
+    ok('trzy autentyczne rendery, źródła, trzy kolory rzadkości i opisy bez pustych galerii')
+
+
 def od_nowa_i_tryb_gry(browser):
     ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
     page, bledy = strona(ctx)
@@ -696,6 +739,7 @@ if __name__ == '__main__':
         migracja_legacy_w_ui(browser)
         szybki_start_i_turniej_solo(browser)
         od_nowa_i_tryb_gry(browser)
+        zbrojownia_zrodla_i_rzadkosci(browser)
         browser.close()
     print(f'\n{len(wyniki)} testów przeglądarkowych: OK')
     sys.exit(0)

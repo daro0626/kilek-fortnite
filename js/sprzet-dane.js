@@ -69,7 +69,6 @@ export const SPRZET = [
     ograniczenia: 'Po strzale musisz przeładować. Odrzut przy krawędzi może zrzucić cię niżej.',
     wskazowka: 'Przed strzałem sprawdź, gdzie wylądujesz. Kolejną próbę przygotuj za osłoną.',
     oficjalne: ['sezon', 'flint'],
-    media: 'flint',
     warianty: [
       ...daneBR('flint-knock-pistol', [
         ['zwykla',81,.33,1,3.19,40.5], ['niepospolita',86,.33,1,3.05,43],
@@ -90,7 +89,6 @@ export const SPRZET = [
     ograniczenia: 'Przeładowanie zajmuje kilka sekund. Na dużej odległości spadają obrażenia.',
     wskazowka: 'Wypatruj go w puli łupów Battle Royale po zmianie z 15.11. Przeładowuj za osłoną.',
     oficjalne: ['br', 'flap'],
-    media: 'flapjack',
     warianty: daneBR('flapjack-rifle', [
       ['zwykla',25,6.3,45,3.58,21.3], ['niepospolita',27,6.3,45,3.41,23],
       ['rzadka',28,6.3,45,3.25,23.8], ['epicka',29,6.3,45,3.09,24.7],
@@ -104,7 +102,6 @@ export const SPRZET = [
     ograniczenia: 'Przy długim strzelaniu musisz kontrolować odrzut i zapas amunicji.',
     wskazowka: 'Zacznij od krótkich serii. W Blitz wypatruj mitycznej wersji tylko przy właściwej rotacji złotych zrzutów.',
     oficjalne: ['sezon','br','hammer'],
-    media: 'hammer',
     warianty: [
       ...daneBR('hammer-assault-rifle', [
         ['zwykla',27,5.8,20,2.42,24.3], ['niepospolita',29,5.8,20,2.31,26.1],
