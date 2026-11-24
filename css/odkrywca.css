@@ -108,9 +108,9 @@
   min-width: 0;
   overflow: hidden;
   scroll-margin-top: 85px;
-  border: 1px solid color-mix(in srgb, var(--rzad), #19122a 60%);
+  border: 1px solid color-mix(in srgb, var(--rzad), #19122a 30%);
   border-radius: 15px;
-  background: linear-gradient(146deg, #261841, #15142a 54%);
+  background: linear-gradient(146deg, color-mix(in srgb, var(--rzad) 17%, #201532), #15142a 65%);
 }
 .rzad-zwykla { --rzad: #e0e3ee; }
 .rzad-niepospolita { --rzad: #8de3a5; }
@@ -122,6 +122,8 @@
 .arsenal-gora {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
   padding: 16px 18px 13px;
+  border-bottom: 3px solid var(--rzad);
+  background: linear-gradient(100deg, color-mix(in srgb, var(--rzad), transparent 88%), transparent 60%);
 }
 .arsenal-gora h2 { margin: 0; max-width: 22ch; font: 800 italic clamp(28px, 5vw, 54px)/.98 var(--disp); text-wrap: balance; }
 .arsenal-gora .znacznik { font: 700 .79rem/1.2 var(--font); color: #c8b9ed; }
@@ -172,8 +174,7 @@
   from { opacity: .38; transform: translateY(8px) scale(1.045); }
   to { opacity: 1; transform: translate(var(--mx,0),var(--my,0)) scale(1); }
 }
-.arsenal-brak { height: 100%; display: grid; place-items: center; padding: 14px; color: #e9dcff; text-align: center; }
-.arsenal-brak p { max-width: 38ch; margin: 0; }
+.arsenal-bez-zdjecia { margin: 9px 15px 0; color: #e9dcff; font-size: .9rem; }
 #arsenal-fotopis { color: #ded3ed; padding: 7px 15px; font-size: .83rem; min-height: 2.35rem; }
 .arsenal-widok a, .arsenal-porownaj a, .sezon-sekcja a, .sezon-archiwum a { color: #d5bcff; text-underline-offset: 3px; }
 .arsenal-ujecia { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 15px 0; }
@@ -199,19 +200,21 @@
 .arsenal-zrodla { overflow-wrap: anywhere; }
 .arsenal-lista { min-width: 0; }
 .arsenal-lista h2, .arsenal-porownaj h2 { font: 800 italic 32px/1 var(--disp); margin: 0 0 6px; }
-#arsenal-karty { display: grid; gap: 6px; }
+#arsenal-karty { display: grid; gap: 13px; }
+.arsenal-grupa h3 { margin: 0 0 6px; color: #e2d5f2; font: 700 .9rem var(--font); }
+.arsenal-grupa > div { display: grid; gap: 6px; }
 .arsenal-karta, .sezon-przedmiot {
   display: flex; align-items: center; min-width: 0; gap: 9px; padding: 5px;
   background: #1d1731; border: 1px solid #604887; border-radius: 8px;
   color: #faf0ff; text-decoration: none; transition: border-color .2s, transform .2s, background .2s;
 }
+.arsenal-karta { border-left: 4px solid var(--rzad,#c8badc); }
 .arsenal-karta:is(:hover,:focus-visible,[aria-current=true]), .sezon-przedmiot:is(:hover,:focus-visible) { border-color: var(--rzad,#e8aeff); background: #2d1e49; }
 .arsenal-karta:active,.sezon-przedmiot:active { transform: scale(.985); }
 .arsenal-karta strong,.sezon-przedmiot strong { display: block; font: 800 italic 20px/1.13 var(--disp); }
 .arsenal-karta small,.sezon-przedmiot small { display: block; color: #dccff0; }
 .arsenal-mini { display: grid; place-items: center; flex: 0 0 65px; height: 49px; min-width: 0; background: #261a47; border-radius: 5px; overflow: hidden; }
 .arsenal-mini img { width: 100%; height: 100%; object-fit: cover; }
-.arsenal-mini-brak { font-size: .75rem; text-align: center; color: #d7c4f4; }
 .arsenal-pusto { margin: 24px; }
 .arsenal-porownaj, .arsenal-przewodnik { margin-top: 19px; }
 .arsenal-pary,.arsenal-porownanie-panele { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -314,7 +317,7 @@
 
 @media (max-width: 800px) {
   .arsenal-uklad { grid-template-columns: minmax(0,1fr); }
-  #arsenal-karty { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .arsenal-grupa > div { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .sezon-sprzet { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 @media (max-width: 585px) {
@@ -355,4 +358,16 @@ html.ukryta :is(.wybor-start .gra-tytul, .arsenal-powieksz img, .sezon-hero pict
 html.ukryta .kolumna.na-szczycie::after { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .portal-cta .btn-glowny:is(:hover,:focus-visible)::after,.kolumna.na-szczycie::after { animation: none; }
+}
+
+.gra-sesja {
+  display: flex;
+  justify-content: flex-end;
+  width: min(100% - 32px, 600px);
+  margin: 8px auto 0;
+}
+.gra-sesja .btn { min-height: 44px; padding-inline: 16px; }
+@media (max-width: 585px) {
+  .portal-cta:has(#od-nowa:not([hidden])) { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .portal-cta:has(#od-nowa:not([hidden])) .btn { min-width: 0; }
 }

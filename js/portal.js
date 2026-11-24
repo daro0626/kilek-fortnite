@@ -71,8 +71,10 @@ export function przejdzDo(nazwa) {
 export function aktualizujPortal(stan) {
   const aktywna = stan.etap !== 'start';
   const kontynuuj = el('kontynuuj');
+  const odNowa = el('od-nowa');
   const opis = el('portal-zapis');
   kontynuuj.hidden = !aktywna;
+  odNowa.hidden = !aktywna;
   kontynuuj.textContent = stan.etap === 'final' ? 'Zobacz wynik' : 'Kontynuuj';
   document.querySelector('[data-akcja="graj-od-razu"]').hidden = aktywna;
   document.querySelector('[data-ustawienia]').hidden = aktywna;

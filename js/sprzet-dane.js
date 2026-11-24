@@ -14,6 +14,7 @@ export const ZRODLA_SPRZETU = {
   br: EPIC.br,
   reload: EPIC.reload,
   blitz: EPIC.blitz,
+  oscar: EPIC.oscar,
   flint: 'https://www.fortnite.com/news/patch-notes-v8-11',
   hammer: 'https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-3-season-3-vibin?lang=en-US',
   flap: 'https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-4-season-3-wilds?lang=en-US',
@@ -69,7 +70,6 @@ export const SPRZET = [
     ograniczenia: 'Po strzale musisz przeładować. Odrzut przy krawędzi może zrzucić cię niżej.',
     wskazowka: 'Przed strzałem sprawdź, gdzie wylądujesz. Kolejną próbę przygotuj za osłoną.',
     oficjalne: ['sezon', 'flint'],
-    media: 'flint',
     warianty: [
       ...daneBR('flint-knock-pistol', [
         ['zwykla',81,.33,1,3.19,40.5], ['niepospolita',86,.33,1,3.05,43],
@@ -90,7 +90,6 @@ export const SPRZET = [
     ograniczenia: 'Przeładowanie zajmuje kilka sekund. Na dużej odległości spadają obrażenia.',
     wskazowka: 'Wypatruj go w puli łupów Battle Royale po zmianie z 15.11. Przeładowuj za osłoną.',
     oficjalne: ['br', 'flap'],
-    media: 'flapjack',
     warianty: daneBR('flapjack-rifle', [
       ['zwykla',25,6.3,45,3.58,21.3], ['niepospolita',27,6.3,45,3.41,23],
       ['rzadka',28,6.3,45,3.25,23.8], ['epicka',29,6.3,45,3.09,24.7],
@@ -104,7 +103,6 @@ export const SPRZET = [
     ograniczenia: 'Przy długim strzelaniu musisz kontrolować odrzut i zapas amunicji.',
     wskazowka: 'Zacznij od krótkich serii. W Blitz wypatruj mitycznej wersji tylko przy właściwej rotacji złotych zrzutów.',
     oficjalne: ['sezon','br','hammer'],
-    media: 'hammer',
     warianty: [
       ...daneBR('hammer-assault-rifle', [
         ['zwykla',27,5.8,20,2.42,24.3], ['niepospolita',29,5.8,20,2.31,26.1],
@@ -113,6 +111,20 @@ export const SPRZET = [
       ], [50,100]),
       zloteZrzuty('mityczna'),
     ],
+  },
+  {
+    id: 'furia-oscara', nazwa: 'Strzelba automatyczna Furia Oscara', oryginal: 'Oscar’s Frenzy Auto Shotgun', typ: 'Strzelba',
+    opis: 'Strzelba wskazana przez Epic jako nagroda związana z Dniem Kapitana Oscara.',
+    zalety: 'Automatyczny tryb strzelania sprawdza się przy krótkim dystansie.',
+    ograniczenia: 'Epic nie podał w ogłoszeniu parametrów tej odmiany ani bieżącej rotacji.',
+    wskazowka: 'W notatce wydarzenia Oscar pilnował The Tiger’s Eye. Dostępność sprawdź w Battle Royale.',
+    oficjalne: ['oscar'],
+    warianty: [{
+      id: 'br-oscar', rzadkosc: 'nieznana', tryby: ['br'], status: 'potwierdzony',
+      wersja: 'Łowcy Skarbów · Dzień Kapitana 22.11',
+      nota: 'Potwierdzona w ogłoszeniu wydarzenia. Bieżąca rotacja wymaga sprawdzenia.',
+      zrodlo: EPIC.oscar, nazwaZrodla: 'Epic · Dzień Kapitana Oscara', sprawdzono: '24.11.2026',
+    }],
   },
   {
     id: 'dragoon', nazwa: 'Strzelba Gilded Dragoon', oryginal: 'Gilded Dragoon Shotgun', typ: 'Strzelba',

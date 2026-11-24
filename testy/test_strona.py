@@ -388,11 +388,11 @@ def portal_i_swobodne_losowanie(browser):
     page.locator('select[name=trud-rundy]').select_option('ekstremalny')
     odkryj_karte(page, True)
     assert karta_id(page).startswith('E')
-    klik(page, '[data-akcja=konfiguracja]', True)
+    klik(page, '#gra-sesja [data-akcja=od-nowa]', True)
     expect(page.locator('#potwierdz-serie')).to_be_visible()
     page.keyboard.press('Escape')
     expect(page.locator('#kartaTytul')).to_be_visible()
-    klik(page, '[data-akcja=konfiguracja]', True)
+    klik(page, '#gra-sesja [data-akcja=od-nowa]', True)
     klik(page, '#potwierdz-serie [value=reset]', True)
     expect(page.locator('h1.gra-tytul')).to_be_visible()
     assert etap(page) == 'start'
@@ -443,7 +443,7 @@ def legendarne_wyniki(browser):
         if sposob == 'seria':
             klik(page, '[data-akcja=popraw][data-g="1"]', True)
             expect(page.locator('.kolumna.p1 .sr')).to_have_text('0 pkt')
-            klik(page, '[data-akcja=konfiguracja]', True)
+            klik(page, '#gra-sesja [data-akcja=od-nowa]', True)
             klik(page, '#potwierdz-serie [value=reset]', True)
     assert not bledy, bledy
     ctx.close()
@@ -469,7 +469,7 @@ def dzialy_i_opinie(browser):
         misja = karta_id(page)
         dzial(page, 'zbrojownia', dotyk)
         bez_przewijania_w_bok(page, f'zbrojownia {w}')
-        expect(page.locator('#arsenal-karty a')).to_have_count(7)
+        expect(page.locator('#arsenal-karty a')).to_have_count(8)
         expect(page.locator('#arsenal-widok h2')).to_have_text('Pistolet krzemieniowy')
         assert page.evaluate("document.querySelector('.arsenal-gora .znacznik').getBoundingClientRect().bottom <= document.querySelector('.arsenal-gora h2').getBoundingClientRect().top")
         page.wait_for_function("document.querySelector('#arsenal-foto img').naturalWidth > 500")
@@ -478,10 +478,12 @@ def dzialy_i_opinie(browser):
         expect(page.locator('.arsenal-dialog')).to_be_visible()
         page.keyboard.press('Escape')
         expect(page.locator('.arsenal-dialog')).to_be_hidden()
-        klik(page, '[data-ujecie=gra]', dotyk)
-        expect(page.locator('#arsenal-foto')).to_contain_text('Brak potwierdzonego ujęcia')
+        expect(page.locator('[data-ujecie=gra]')).to_have_count(0)
+        expect(page.locator('[data-ujecie=ikona]')).to_have_count(0)
+        expect(page.locator('#arsenal-foto img')).to_have_count(1)
         page.locator('#arsenal-wariant').select_option('flint/br-epicka')
         expect(page.locator('.arsenal-gora .arsenal-rzadkosc')).to_have_text('Epicka')
+        expect(page.locator('#arsenal-widok')).to_have_class(re.compile('rzad-epicka'))
         expect(page.locator('.arsenal-parametry')).to_contain_text('95')
         page.locator('[data-porownaj]').first.select_option('usopp/blitz-legendarna')
         expect(page.locator('#arsenal-porownanie')).to_contain_text('Wyścigówa Usoppa')
@@ -517,6 +519,8 @@ def dzialy_i_opinie(browser):
         expect(page.locator('.sezon-hero h1')).to_have_text('Łowcy Skarbów')
         assert page.evaluate("document.querySelector('.sezon-hero .znacznik').getBoundingClientRect().bottom <= document.querySelector('.sezon-hero h1').getBoundingClientRect().top")
         expect(page.locator('.sezon-playlisty article')).to_have_count(4)
+        expect(page.locator('.sezon-hero .sezon-data')).to_contain_text('24.11.2026')
+        expect(page.locator('.sezon-os li').filter(has_text='Start Złotego Tygodnia').locator('a')).to_have_attribute('href', re.compile('MuNA'))
         expect(page.locator('.sezon-hero img')).to_be_visible()
         klik(page, '.sezon-przedmiot[href="#zbrojownia/flapjack"]', dotyk)
         expect(page.locator('#arsenal-widok h2')).to_have_text('Karabin naleśnikowy')
@@ -558,7 +562,7 @@ def szybki_start_i_turniej_solo(browser):
     expect(page.locator('#hud')).to_be_hidden()
     assert 'pkt' not in page.locator('.karta-meta').inner_text()
     assert page.evaluate("JSON.parse(localStorage.getItem('kc:fortnite')).sklad") == 'duo'
-    klik(page, '[data-akcja=konfiguracja]', True)
+    klik(page, '#gra-sesja [data-akcja=od-nowa]', True)
     klik(page, '#potwierdz-serie [value=reset]', True)
     wybierz_turniej(page, True, 'solo')
     for nazwa in ['1 pkt','3 pkt','5 pkt','7 pkt','10 pkt']:
@@ -608,6 +612,118 @@ def migracja_legacy_w_ui(browser):
     ok('migracja legacy, potwierdzenie porzucenia i punktacja następnej rundy')
 
 
+def zbrojownia_zrodla_i_rzadkosci(browser):
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
+    page, bledy = strona(ctx)
+    page.goto(URL + '#zbrojownia')
+    obrazy = page.locator('.arsenal-grupa').filter(has=page.get_by_role('heading', name='Z obrazem'))
+    opisy = page.locator('.arsenal-grupa').filter(has=page.get_by_role('heading', name='Opisy bez zdjęć'))
+    expect(obrazy.locator('a img')).to_have_count(4)
+    expect(opisy.locator('a')).to_have_count(4)
+    expect(opisy.locator('img')).to_have_count(0)
+
+    for id in ('flint', 'hammer', 'flapjack', 'furia-oscara'):
+        page.goto(URL + '#zbrojownia/' + id)
+        expect(page.locator('#arsenal-foto img')).to_have_attribute('src', f'assets/fortnite/{id}-render.webp')
+        page.locator('#arsenal-foto img').evaluate('(img) => img.decode()')
+        expect(page.locator('#arsenal-fotopis')).to_contain_text('Render referencyjny')
+        expect(page.locator('#arsenal-fotopis a')).to_have_attribute('href', re.compile(r'https://(?:www\.fortnite\.com|communities\.epicgames\.com)/'))
+        expect(page.locator('[data-ujecie]')).to_have_count(0)
+
+    page.goto(URL + '#zbrojownia/hammer/br-rzadka')
+    pole = page.locator('#arsenal-wariant')
+    etykieta = page.locator('.arsenal-gora .arsenal-rzadkosc')
+    kolory = []
+    for id, nazwa in [('rzadka', 'Rzadka'), ('epicka', 'Epicka'), ('legendarna', 'Legendarna')]:
+        pole.select_option('hammer/br-' + id)
+        expect(etykieta).to_have_text(nazwa)
+        expect(page.locator('#arsenal-foto img')).to_have_attribute('src', 'assets/fortnite/hammer-render.webp')
+        expect(page.locator('.arsenal-karta[aria-current=true]')).to_have_class(re.compile('rzad-' + id))
+        kolor = etykieta.evaluate('(el) => getComputedStyle(el).color')
+        assert kolor == page.locator('.arsenal-gora').evaluate('(el) => getComputedStyle(el).borderBottomColor')
+        kolory.append(kolor)
+        bez_przewijania_w_bok(page, 'rzadkość ' + id)
+    assert len(set(kolory)) == 3, kolory
+
+    page.goto(URL + '#zbrojownia/usopp/blitz-legendarna')
+    expect(page.locator('#arsenal-widok h2')).to_have_text('Wyścigówa Usoppa')
+    expect(page.locator('.arsenal-bez-zdjecia')).to_be_visible()
+    expect(page.locator('#arsenal-foto, [data-ujecie], [data-zoom]')).to_have_count(0)
+    expect(page.locator('.arsenal-stan')).to_contain_text('Blitz Royale')
+    assert not bledy, bledy
+    ctx.close()
+    ok('cztery autentyczne rendery, źródła, trzy kolory rzadkości i opisy bez pustych galerii')
+
+
+def od_nowa_i_tryb_gry(browser):
+    ctx = kontekst(browser, 390, 844, True, reduced_motion='reduce')
+    page, bledy = strona(ctx)
+    page.goto(URL + '#wyzwania')
+    expect(page.get_by_role('combobox', name='Tryb gry', exact=True)).to_be_visible()
+    oczekiwane = ['Solo', 'Pojedynek Solo', 'Duo']
+    assert page.locator('select[name=forma-gry] option').all_text_contents() == oczekiwane
+    expect(page.get_by_role('combobox', name='Budowanie', exact=True)).to_be_visible()
+    expect(page.locator('select[name=sklad]')).to_have_count(0)
+    wybierz_turniej(page, True, 'solo')
+    page.locator('select[name=trud]').select_option('normalny')
+    klik(page, '[data-akcja=rozpocznij]', True)
+    odkryj_karte(page, True)
+    klik(page, '[data-akcja=graj]', True)
+    klik(page, '[data-akcja=rozlicz]', True)
+    expect(page.locator('#gra-sesja button')).to_be_visible()
+    klik(page, '.opcja.tak', True)
+    klik(page, '[data-akcja=zatwierdz]', True)
+    expect(page.locator('.hud-gracz.p0 b')).to_have_text('3')
+    nowa_karta = karta_id(page)
+
+    dzial(page, 'start', True)
+    page.reload()
+    expect(page.locator('#kontynuuj')).to_have_text('Kontynuuj')
+    expect(page.locator('#od-nowa')).to_be_visible()
+    klik(page, '#od-nowa', True)
+    expect(page.locator('#potwierdz-tytul')).to_have_text('Zacząć od nowa?')
+    expect(page.locator('#potwierdz-serie p')).to_contain_text('punkty zostaną w historii')
+    page.keyboard.press('Escape')
+    klik(page, '#kontynuuj', True)
+    assert karta_id(page) == nowa_karta
+    expect(page.locator('.hud-gracz.p0 b')).to_have_text('3')
+
+    dzial(page, 'start', True)
+    klik(page, '#od-nowa', True)
+    klik(page, '#potwierdz-serie button[value=reset]', True)
+    expect(page.locator('h1.gra-tytul')).to_have_text('Nowa gra')
+    assert etap(page) == 'start'
+    assert page.evaluate('location.hash') == '#wyzwania'
+    zapis = "JSON.parse(localStorage.getItem('kc:fortnite'))"
+    stara_historia = page.evaluate(zapis + '.historia')
+    assert len(stara_historia) == 1 and stara_historia[0]['punkty'] == [3]
+
+    page.locator('select[name=forma-gry]').select_option('duet')
+    page.locator('select[name=tryb]').select_option('zero')
+    klik(page, '#startSpecjalne summary', True)
+    klik(page, '[data-akcja=zaznacz-legendarna]', True)
+    klik(page, '[data-akcja=rozpocznij]', True)
+    odkryj_karte(page, True)
+    klik(page, '[data-akcja=graj]', True)
+    klik(page, '[data-akcja=rozlicz]', True)
+    expect(page.locator('.panel-gracza')).to_have_count(1)
+    klik(page, '.opcja.tak', True)
+    klik(page, '[data-akcja=zatwierdz]', True)
+    expect(page.locator('#finalTytul')).to_have_text('Wynik drużyny')
+    assert page.evaluate(zapis + '.sklad') == 'duo'
+    dzial(page, 'start', True)
+    page.reload()
+    expect(page.locator('#kontynuuj')).to_have_text('Zobacz wynik')
+    klik(page, '#od-nowa', True)
+    expect(page.locator('#potwierdz-serie p')).to_contain_text('Zapisany wynik')
+    klik(page, '#potwierdz-serie button[value=reset]', True)
+    expect(page.locator('h1.gra-tytul')).to_have_text('Nowa gra')
+    assert page.evaluate(zapis + '.historia.map(w => w.punkty)') == [[25], [3]]
+    assert not bledy, bledy
+    ctx.close()
+    ok('Od nowa z aktywnej i zakończonej gry, anulowanie i zachowanie punktów, Solo/Duo oraz Budowanie')
+
+
 if __name__ == '__main__':
     with sync_playwright() as pw:
         browser = pw.chromium.launch(executable_path=os.getenv('CHROMIUM_PATH'), args=['--enable-unsafe-swiftshader'])
@@ -624,6 +740,8 @@ if __name__ == '__main__':
         dzialy_i_opinie(browser)
         migracja_legacy_w_ui(browser)
         szybki_start_i_turniej_solo(browser)
+        od_nowa_i_tryb_gry(browser)
+        zbrojownia_zrodla_i_rzadkosci(browser)
         browser.close()
     print(f'\n{len(wyniki)} testów przeglądarkowych: OK')
     sys.exit(0)

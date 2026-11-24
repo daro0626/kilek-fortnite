@@ -11,7 +11,7 @@
 <script>
   (() => {
     const [dzial, przedmiot = 'flint'] = location.hash.slice(1).split('/');
-    const renders = { flint: 'flint-render.webp', hammer: 'hammer-render.webp', flapjack: 'flapjack-render.webp' };
+    const renders = { flint: 'flint-render.webp', hammer: 'hammer-render.webp', flapjack: 'flapjack-render.webp', 'furia-oscara': 'furia-oscara-render.webp' };
     const file = dzial === 'aktualnie'
       ? (matchMedia('(max-width: 640px)').matches ? 'wyspa-port-mobile.webp' : 'wyspa-port.webp')
       : dzial === 'zbrojownia' && Object.hasOwn(renders, przedmiot) ? renders[przedmiot] : '';
@@ -81,6 +81,7 @@
           <button class="btn btn-glowny" type="button" data-akcja="graj-od-razu">Graj od razu</button>
           <a href="#wyzwania" class="btn btn-drugi" data-ustawienia>Ustaw grę</a>
           <a href="#wyzwania" class="btn btn-glowny" id="kontynuuj" hidden>Kontynuuj</a>
+          <button type="button" class="btn btn-drugi" id="od-nowa" data-akcja="od-nowa" hidden>Od nowa</button>
         </div>
         <p class="portal-zapis" id="portal-zapis" hidden></p>
       </div>
@@ -115,6 +116,9 @@
   </section>
   <section data-dzial="wyzwania" aria-label="Wyzwania" hidden>
     <div class="hud" id="hud" hidden></div>
+    <div class="gra-sesja" id="gra-sesja" hidden>
+      <button type="button" class="btn btn-drugi" data-akcja="od-nowa">Od nowa</button>
+    </div>
     <div id="ekran" class="ekran" tabindex="-1"></div>
   </section>
   <section class="portal-katalog portal-wrap" data-dzial="misje" aria-labelledby="katalog-tytul" hidden>
@@ -153,8 +157,8 @@
             <div><p class="arsenal-rzadkosc">Rzadka</p><p class="arsenal-status">Potwierdzone</p></div>
           </header>
           <figure class="arsenal-galeria">
-            <div id="arsenal-foto"><img data-startowy width="1000" height="640" loading="lazy" fetchpriority="high" decoding="async" src="assets/fortnite/flint-render.webp" alt="Pistolet krzemieniowy, Render Epic"></div>
-            <figcaption id="arsenal-fotopis">Oficjalny render promocyjny z premiery v8.11. <a href="https://www.fortnite.com/news/patch-notes-v8-11">Epic · render v8.11</a></figcaption>
+            <div id="arsenal-foto"><img data-startowy width="918" height="640" loading="lazy" fetchpriority="high" decoding="async" src="assets/fortnite/flint-render.webp" alt="Pistolet krzemieniowy, Render Epic"></div>
+            <figcaption id="arsenal-fotopis">Render referencyjny. Rzadkość opisuje wybrany wariant karty. <a href="https://www.fortnite.com/news/patch-notes-v8-11">Epic Games · v8.11 · rozdział 1, sezon 8</a></figcaption>
           </figure>
         </article>
         <nav class="arsenal-lista" aria-label="Przedmioty">
@@ -187,7 +191,7 @@
           <h1 id="aktualnie-tytul" data-portal-fokus tabindex="-1">Łowcy <span>Skarbów</span></h1>
           <p>Wejdź na Wyspę Kościotrupów. Znajdź mapę skarbu, odwiedź okręty kapitanów i zobacz ich wyposażenie.</p>
           <div class="sezon-hero-info"><span>Start <time datetime="2026-11-01">1.11.2026</time></span><span>Aktualizacja 43.10</span></div>
-          <p class="sezon-data">Ostatnia weryfikacja 23.11.2026</p>
+          <p class="sezon-data">Ostatnia weryfikacja 24.11.2026</p>
           <a href="https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time">Oficjalny opis sezonu</a>
         </div>
       </header>

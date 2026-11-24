@@ -1,6 +1,9 @@
 // Testy logiki KILEK CHALLENGE. Uruchom: node testy/test_logika.mjs
 // Nie potrzebują przeglądarki ani sieci. Niczego nie zapisują do repozytorium.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { SPRZET } from '../js/sprzet-dane.js';
+import { MATERIALY_SPRZETU, materialSprzetu, POLITYKA_EPIC } from '../js/sprzet-media.js';
 import { MISJE, TRYBY, TRUDNOSCI, pula, dostepna, MIN_KART, SLOWNIK, PUNKTACJA, LEGENDARNA, SKLADY } from '../js/misje.js';
 import * as S from '../js/seria.js';
 
@@ -33,6 +36,25 @@ const rozegrajRunde = (s, a = 1, b = 0) => {
   s = S.ustawWynik(s, 0, a); s = S.ustawWynik(s, 1, b);
   return S.zatwierdz(s);
 };
+
+test('rejestr obrazów wskazuje właściwy przedmiot, rzeczywisty WebP i źródło Epic', () => {
+  assert.equal(new Set(MATERIALY_SPRZETU.map(m => m.plik)).size, MATERIALY_SPRZETU.length);
+  for (const m of MATERIALY_SPRZETU) {
+    const przedmiot = SPRZET.find(s => s.id === m.przedmiot);
+    assert.ok(przedmiot, m.przedmiot);
+    assert.equal(m.podstawaUzycia, POLITYKA_EPIC);
+    assert.match(m.zrodlo, /^https:\/\/(www\.fortnite\.com|communities\.epicgames\.com)\//);
+    assert.match(m.sprawdzono, /^\d{4}-\d{2}-\d{2}$/);
+    const plik = readFileSync(new URL('../' + m.plik, import.meta.url));
+    assert.equal(plik.toString('ascii', 8, 12), 'WEBP');
+    if (['ikona', 'gra'].includes(m.typ)) {
+      assert.ok(przedmiot.warianty.some(w => w.id === m.wariant));
+    }
+  }
+  assert.equal(materialSprzetu('usopp', { id: 'blitz-legendarna' }, 'render'), undefined);
+  assert.equal(materialSprzetu('hammer', { id: 'br-epicka' }, 'ikona'), undefined);
+  assert.equal(materialSprzetu('hammer', { id: 'br-epicka' }, 'render').wariant, null);
+});
 
 test('każda karta ma pełne i poprawne dane', () => {
   const ids = new Set();

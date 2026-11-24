@@ -1,16 +1,13 @@
 import { METRYKI, PLAYLISTY, RZADKOSCI, SPRZET, WERYFIKACJA, ZRODLA_SPRZETU } from './sprzet-dane.js';
 import { UZBROJENIE } from './wiedza-dane.js';
+import { materialSprzetu } from './sprzet-media.js';
 
 const statusy = { potwierdzony: 'Potwierdzone', sprawdz: 'Do sprawdzenia', archiwum: 'Archiwum' };
 const etykietyUjec = { render: 'Render Epic', ikona: 'Ekwipunek', gra: 'W meczu' };
 const nazwyZrodel = {
   sezon: 'Epic · start sezonu', br: 'Epic · aktualizacja 43.10', reload: 'Epic · Reaktywacja 43.00',
   blitz: 'Epic · Blitz 43.00', flint: 'Epic · render v8.11', hammer: 'Epic · render Vibin’', flap: 'Epic · render Wilds',
-};
-const media = {
-  flint: { rozmiar: [1000,640], zrodlo: 'flint', podpis: 'Oficjalny render promocyjny z premiery v8.11.' },
-  hammer: { rozmiar: [1000,554], zrodlo: 'hammer', podpis: 'Oficjalny render promocyjny z sezonu Vibin’.' },
-  flapjack: { rozmiar: [1000,564], zrodlo: 'flap', podpis: 'Oficjalny render promocyjny z sezonu Wilds.' },
+  oscar: 'Epic · Dzień Kapitana Oscara',
 };
 const para = SPRZET.flatMap(s => s.warianty.map(w => ({ s, w })));
 const klucz = ({ s, w }) => s.id + '/' + w.id;
@@ -23,45 +20,29 @@ const opcje = (slownik, zero) => `<option value="">${zero}</option>${Object.entr
   `<option value="${id}">${nazwa}</option>`).join('')}`;
 
 export function miniaturaSprzetu(s, w) {
-  if (!s.media) return `<span class="arsenal-mini arsenal-mini-brak">${s.typ}</span>`;
-  const ikona = w?.ikona?.plik ?? media[s.media].ikona?.plik;
-  return `<span class="arsenal-mini"><img width="270" height="178" loading="lazy" decoding="async"
-    src="assets/fortnite/${ikona || s.media + '-mini.webp'}" alt=""></span>`;
+  const obraz = materialSprzetu(s.id, w, 'ikona') ?? materialSprzetu(s.id, w, 'miniatura-renderu');
+  if (!obraz) return '';
+  return `<span class="arsenal-mini"><img width="${obraz.rozmiar[0]}" height="${obraz.rozmiar[1]}" loading="lazy" decoding="async"
+    src="${obraz.plik}" alt=""></span>`;
 }
 
-function ujecie(s, w, typ) {
-  const m = s.media && media[s.media];
-  if (!m) return null;
-  if (typ === 'render') return { plik: s.media + '-render.webp', ...m };
-  return w[typ] || m[typ] || null;
-}
+const dostepneKadry = (s, w) => Object.keys(etykietyUjec)
+  .map(typ => materialSprzetu(s.id, w, typ)).filter(Boolean);
 
-function brakUjecia(s, typ) {
-  if (s.id === 'usopp') return 'Brak potwierdzonego ujęcia z udokumentowaną zgodą na wykorzystanie grafiki crossoveru.';
-  if (typ === 'ikona') return 'Brak potwierdzonego ujęcia ikony z ekwipunku. Miniatura na liście może pochodzić z renderu Epic.';
-  if (typ === 'gra') return 'Brak potwierdzonego ujęcia tej broni w rękach postaci lub jako łupu na ziemi.';
-  return 'Brak potwierdzonego ujęcia z materiałów, które można tu opublikować.';
-}
-
-function pokazZdjecie(root, s, w, typ, poprzedniObraz) {
-  const foto = ujecie(s, w, typ);
+function pokazZdjecie(root, s, foto, poprzedniObraz) {
   const pole = root.querySelector('#arsenal-foto');
-  pole.innerHTML = foto
-    ? `<button class="arsenal-powieksz" type="button" data-zoom aria-label="Powiększ obraz · ${s.nazwa}">
-        <img src="assets/fortnite/${foto.plik}" width="${foto.rozmiar[0]}" height="${foto.rozmiar[1]}" alt="${s.nazwa}, ${etykietyUjec[typ]}" decoding="async" fetchpriority="high">
-        <span>Powiększ</span></button>`
-    : `<div class="arsenal-brak"><p>${brakUjecia(s, typ)}</p></div>`;
-  if (foto && poprzedniObraz?.getAttribute('src') === 'assets/fortnite/' + foto.plik) {
-    poprzedniObraz.loading = 'eager';
+  pole.innerHTML = `<button class="arsenal-powieksz" type="button" data-zoom aria-label="Powiększ obraz · ${s.nazwa}">
+    <img src="${foto.plik}" width="${foto.rozmiar[0]}" height="${foto.rozmiar[1]}" alt="${s.nazwa}, ${etykietyUjec[foto.typ]}" decoding="async" fetchpriority="high">
+    <span>Powiększ</span></button>`;
+  if (poprzedniObraz?.getAttribute('src') === foto.plik) {
     pole.querySelector('img').replaceWith(poprzedniObraz);
   }
-  root.querySelector('#arsenal-fotopis').innerHTML = foto
-    ? `${foto.podpis} ${zrodlo(ZRODLA_SPRZETU[foto.zrodlo], nazwyZrodel[foto.zrodlo])}`
-    : 'Źródła dla przedmiotu podano poniżej.';
+  const opis = foto.wariant === null ? 'Render referencyjny. Rzadkość opisuje wybrany wariant karty.' : etykietyUjec[foto.typ] + '.';
+  root.querySelector('#arsenal-fotopis').innerHTML =
+    `${opis} ${zrodlo(foto.zrodlo, `${foto.tworca} · ${foto.publikacja}`)}`;
   for (const b of root.querySelectorAll('[data-ujecie]')) {
-    b.setAttribute('aria-pressed', String(b.dataset.ujecie === typ));
+    b.setAttribute('aria-pressed', String(b.dataset.ujecie === foto.typ));
   }
-  return foto;
 }
 
 function statystyki(w) {
@@ -89,7 +70,7 @@ function porownanie(root) {
         return `<div><dt>${nazwa}${opis}</dt><dd>${Number.isFinite(p) ? liczba.format(p) + j : 'Brak potwierdzonych danych'}
             ${mozna ? `<span class="arsenal-belka" aria-hidden="true" style="--dlugosc:${100*p/Math.max(p,inne,1)}%"></span>` : ''}</dd></div>`;
       }).join('')}</dl>
-      <p class="nota">Sprawdzono ${WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
+      <p class="nota">Sprawdzono ${w.sprawdzono ?? WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
     </section>`).join('')}</div>`;
 }
 
@@ -137,16 +118,19 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
 
   function pokaz({s,w}) {
     aktualna = {s,w};
+    const dostepneUjecia = dostepneKadry(s,w);
+    foto = dostepneUjecia.find(kadr => kadr.typ === typUjecia) ?? dostepneUjecia[0];
+    typUjecia = foto?.typ ?? 'render';
     const poprzedniObraz = pierwszyRender ? widok.querySelector('img[data-startowy][loading="eager"]') : null;
     pierwszyRender = false;
     widok.className = 'arsenal-widok rzad-' + w.rzadkosc;
     widok.innerHTML = `<header class="arsenal-gora"><div><p class="znacznik">${s.typ} · ${w.wersja}</p>
       <h2 tabindex="-1">${s.nazwa}</h2><p class="arsenal-oryginal">${s.oryginal}</p></div>
-      <div><p class="arsenal-rzadkosc">${wariant(w)}</p><p class="arsenal-status">${statusy[w.status]}</p></div></header>
-      <figure class="arsenal-galeria"><div id="arsenal-foto"></div>
-      <figcaption id="arsenal-fotopis"></figcaption></figure>
-      <div class="arsenal-ujecia" role="group" aria-label="Widok przedmiotu">${Object.entries(etykietyUjec).map(([id,nazwa]) =>
-        `<button type="button" data-ujecie="${id}" aria-pressed="false">${nazwa}</button>`).join('')}</div>
+      <div><p class="arsenal-rzadkosc">${wariant(w)}</p><p class="arsenal-status">${w.rzadkosc === 'mityczna' ? '6 gwiazdek · ' : ''}${statusy[w.status]}</p></div></header>
+      ${foto ? '<figure class="arsenal-galeria"><div id="arsenal-foto"></div><figcaption id="arsenal-fotopis"></figcaption></figure>'
+        : '<p class="arsenal-bez-zdjecia">Opis przedmiotu · oczekuje na potwierdzone zdjęcie.</p>'}
+      ${dostepneUjecia.length > 1 ? `<div class="arsenal-ujecia" role="group" aria-label="Widok przedmiotu">${dostepneUjecia.map(({typ}) =>
+        `<button type="button" data-ujecie="${typ}" aria-pressed="false">${etykietyUjec[typ]}</button>`).join('')}</div>` : ''}
       <div class="arsenal-szczegoly">
         <label class="arsenal-wariant">Wariant i tryb
           <select id="arsenal-wariant">${para.filter(p => p.s === s && pasuje(p)).map(p =>
@@ -154,12 +138,12 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
         </label>
         <p>${s.opis}</p><p class="arsenal-stan"><strong>${zakres(w)}</strong> · ${w.nota}</p>
         ${statystyki(w)}
-        <p class="nota">Sprawdzono ${WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
+        <p class="nota">Sprawdzono ${w.sprawdzono ?? WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
         <dl class="arsenal-porady"><div><dt>Zaleta</dt><dd>${s.zalety}</dd></div>
           <div><dt>Ograniczenie</dt><dd>${s.ograniczenia}</dd></div><div><dt>Jak używać</dt><dd>${s.wskazowka}</dd></div></dl>
         <p class="arsenal-zrodla">${s.oficjalne.map(z => zrodlo(ZRODLA_SPRZETU[z], nazwyZrodel[z])).join(' · ')}</p>
       </div>`;
-    foto = pokazZdjecie(root,s,w,typUjecia,poprzedniObraz);
+    if (foto) pokazZdjecie(root,s,foto,poprzedniObraz);
   }
   function odswiez() {
     const pasujace = para.filter(pasuje);
@@ -174,10 +158,17 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
       return;
     }
     if (!aktualna || !pasuje(aktualna)) aktualna = pasujace[0];
+    pierwsze.set(aktualna.s.id, aktualna);
     pokaz(aktualna);
-    lista.innerHTML = [...pierwsze.values()].map(({s,w}) =>
-      `<a class="arsenal-karta rzad-${w.rzadkosc}" href="#zbrojownia/${klucz({s,w})}" ${s === aktualna.s ? 'aria-current="true"' : ''}>
-        ${miniaturaSprzetu(s,w)}<span><strong>${s.nazwa}</strong><small>${s.typ}</small></span></a>`).join('');
+    const grupy = new Map([['Z obrazem', []], ['Opisy bez zdjęć', []]]);
+    for (const {s,w} of pierwsze.values()) {
+      const zeZdjeciem = dostepneKadry(s,w).length > 0;
+      grupy.get(zeZdjeciem ? 'Z obrazem' : 'Opisy bez zdjęć').push(
+        `<a class="arsenal-karta rzad-${w.rzadkosc}" href="#zbrojownia/${klucz({s,w})}" ${s === aktualna.s ? 'aria-current="true"' : ''}>
+          ${miniaturaSprzetu(s,w)}<span><strong>${s.nazwa}</strong><small>${s.typ}</small></span></a>`);
+    }
+    lista.innerHTML = [...grupy].filter(([,linki]) => linki.length).map(([nazwa, linki]) =>
+      `<section class="arsenal-grupa"><h3>${nazwa}</h3><div>${linki.join('')}</div></section>`).join('');
   }
   function otworz(id, target) {
     if (!id) return;
@@ -202,7 +193,8 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
       const p = para.find(p => klucz(p) === e.target.value);
       if (!p) return;
       history.replaceState(null, '', '#zbrojownia/' + klucz(p));
-      pokaz(p);
+      aktualna = p;
+      odswiez();
       znajdz('#arsenal-wariant')?.focus({ preventScroll: true });
     }
     if (e.target.matches('[data-porownaj]')) porownanie(root);
@@ -225,13 +217,16 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
     const przycisk = e.target.closest('button');
     if (!przycisk) return;
     if (przycisk.dataset.ujecie && aktualna) {
-      typUjecia = przycisk.dataset.ujecie;
-      foto = pokazZdjecie(root, aktualna.s, aktualna.w, typUjecia);
+      const wybrany = materialSprzetu(aktualna.s.id, aktualna.w, przycisk.dataset.ujecie);
+      if (!wybrany) return;
+      foto = wybrany;
+      typUjecia = foto.typ;
+      pokazZdjecie(root, aktualna.s, foto);
     }
     if (przycisk.hasAttribute('data-zoom') && foto && aktualna) {
       dialog.querySelector('h2').textContent = aktualna.s.nazwa;
       dialog.querySelector('.arsenal-dialog-foto').innerHTML =
-        `<img src="assets/fortnite/${foto.plik}" alt="${aktualna.s.nazwa}, ${etykietyUjec[typUjecia]}">`;
+        `<img src="${foto.plik}" alt="${aktualna.s.nazwa}, ${etykietyUjec[typUjecia]}">`;
       dialog.showModal();
     }
     if (przycisk.hasAttribute('data-zamknij-foto')) dialog.close();
