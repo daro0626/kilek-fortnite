@@ -9,7 +9,7 @@ const toggle = document.querySelector('.portal-menu-toggle');
 const pola = ['tryb', 'trud', 'sklad', 'kategoria'];
 const el = id => document.getElementById(id);
 const katalog = [...MISJE, LEGENDARNA];
-let dzial, stanZrodlo;
+let dzial, sciezka, stanZrodlo, animacjaDzialu;
 const wejscia = new IntersectionObserver(wpisy => {
   for (const wpis of wpisy) {
     if (!wpis.isIntersecting) continue;
@@ -20,8 +20,20 @@ const wejscia = new IntersectionObserver(wpisy => {
 
 function pokazDzial(fokus = false) {
   const hash = location.hash.slice(1);
-  const nowy = dzialy.has(hash) ? hash : 'start';
-  if (dzial === nowy) return;
+  const [glowny, ...szczegoly] = hash.split('/');
+  const nowy = dzialy.has(glowny) ? glowny : 'start';
+  if (sciezka === hash) return;
+  sciezka = hash;
+  if (dzial === nowy) {
+    pokazSekcje(dzial, stanZrodlo(), szczegoly);
+    if (dzial === 'zbrojownia' && szczegoly.length) {
+      const karta = el('arsenal-widok');
+      karta.scrollIntoView({ block: 'start', behavior: 'instant' });
+      karta.querySelector('h2')?.focus({ preventScroll: true });
+    }
+    return;
+  }
+  animacjaDzialu?.cancel();
   dzial = nowy;
   for (const [nazwa, sekcja] of dzialy) sekcja.hidden = nazwa !== dzial;
   for (const link of menu) {
@@ -31,8 +43,8 @@ function pokazDzial(fokus = false) {
   toggle.setAttribute('aria-expanded', 'false');
   document.body.dataset.dzial = dzial;
   if (dzial === 'misje' && !el('katalog-lista').childNodes.length) renderKatalog();
-  pokazSekcje(dzial, stanZrodlo());
-  dzialy.get(dzial).querySelectorAll('.portal-kafel, .wiedza-panel').forEach(panel => {
+  pokazSekcje(dzial, stanZrodlo(), szczegoly);
+  dzialy.get(dzial).querySelectorAll('.portal-kafel, .wiedza-panel, .sezon-hero').forEach(panel => {
     if (!panel.dataset.wejscie) wejscia.observe(panel);
   });
   if (!fokus) return;
@@ -41,11 +53,15 @@ function pokazDzial(fokus = false) {
   scrollTo({ top: 0, behavior: 'instant' });
   cel?.focus({ preventScroll: true });
   if (!document.hidden && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    const naglowek = sekcja.querySelector('.dzial-naglowek,.portal-katalog h1,.gra-tytul');
-    naglowek?.animate([{ transform: 'translateY(12px)', opacity: .25 }, { transform: 'none', opacity: 1 }],
+    const naglowek = sekcja.querySelector('.dzial-naglowek,.portal-katalog h1,.gra-tytul,.sezon-hero-copy');
+    animacjaDzialu = naglowek?.animate([{ transform: 'translateY(12px)', opacity: .25 }, { transform: 'none', opacity: 1 }],
       { duration: 360, easing: 'cubic-bezier(.19,1,.22,1)' });
   }
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) animacjaDzialu?.finish();
+});
 
 export function przejdzDo(nazwa) {
   location.hash = nazwa;
@@ -95,6 +111,12 @@ function renderKatalog() {
     const info = tekst('p', opinia(m.id) ? 'Moja ocena: ' + opinia(m.id).ocena : '', 'katalog-ocena');
     karta.append(naglowek, tekst('p', m.cel), tekst('p', m.odKiedy + ' ' + m.zaliczenie), tekst('p', m.wskazowka),
       tekst('p', `${m.kategoria} · ${m.tryby.map(id => TRYBY[id].nazwa).join(' / ')} · ${m.sklady.map(id => SKLADY[id]).join(' / ')}`, 'katalog-tryby'), info);
+    if (m.id === LEGENDARNA.id) {
+      const wybierz = tekst('button', 'Wybierz tę misję', 'btn btn-drugi');
+      wybierz.type = 'button';
+      wybierz.dataset.akcja = 'zaznacz-legendarna';
+      karta.append(wybierz);
+    }
     karta.addEventListener('toggle', () => {
       if (karta.open && !karta.querySelector('form')) karta.insertAdjacentHTML('beforeend', formularzOpinii(m.id));
     });

@@ -159,37 +159,10 @@
 .dwa-pola > * { background: #272040; margin: 0; padding: 10px 12px; border-radius: 4px; }
 .dwa-pola dd { margin: 4px 0 0; }
 .dwa-pola dt { color: var(--arena-cyjan); font-weight: 700; }
-.model-viewport {
-  display: grid;
-  place-items: center;
-  min-height: 185px;
-  max-height: 285px;
-  perspective: 600px;
-  background: radial-gradient(ellipse, #522b844d, #100e23 73%);
-  border: 1px solid #594281;
-  overflow: hidden;
-}
-.model-svg {
-  width: min(100%, 395px);
-  height: min(54vw, 278px);
-  transform: rotateY(var(--obrot, 0deg));
-  transition: transform .24s var(--ease);
-  animation: sprzet-wejscie .55s var(--ease) both;
-}
-@keyframes sprzet-wejscie { from { transform: rotateY(-42deg) translateX(17px); opacity: .22; } }
-.model-front { fill: #b18be7; stroke: #f2caff; stroke-width: 2; }
-.model-cien { fill: #4c2485; stroke: #9c68ff; stroke-width: 2; }
-.model-siatka { fill: none; stroke: #b988fb95; stroke-dasharray: 5 5; stroke-width: 1.2; }
-.model-siata { fill: #39195e4d; stroke: #4fd8e973; stroke-width: 1.3; }
-.model-obrot, .wiedza-demo label { display: block; padding-block: 8px; color: var(--tekst-2); }
+.wiedza-demo label { display: block; padding-block: 8px; color: var(--tekst-2); }
 input[type="range"] { width: 100%; min-height: 34px; accent-color: #bb8aff; }
-.porownanie, .quiz, .historia { margin-top: 18px; }
-.porownanie-wybor, .porownanie-wynik, .ranking-uklad {
-  display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px;
-}
-.porownanie-wynik article { padding: 10px 14px; background: #211b38; border-radius: 6px; }
-.porownanie-wynik label { display: grid; grid-template-columns: 68px minmax(0,1fr); align-items: center; }
-.porownanie-wynik meter { width: 100%; height: 15px; accent-color: #be8fff; }
+.quiz, .historia { margin-top: 18px; }
+.ranking-uklad { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
 
 .wiedza-demo { padding-top: 14px; }
 .demo-scena {
@@ -221,8 +194,8 @@ input[type="range"] { width: 100%; min-height: 34px; accent-color: #bb8aff; }
 .quiz input, .opcja-serii input { accent-color: #bf97ff; }
 .quiz input { flex: none; }
 .quiz button { width: auto; }
-.aktualnosci-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; }
-.notatka h2 { font-size: clamp(26px,4vw,38px); margin-top: 12px; }
+
+
 .ranking { padding-left: 22px; }
 .ranking li { padding: 9px 0; border-bottom: 1px solid #493768; }
 .ranking li b { float: right; color: #ffb678; }
@@ -242,23 +215,16 @@ input[type="range"] { width: 100%; min-height: 34px; accent-color: #bb8aff; }
 .katalog-karta .opinia-form { margin: 0 12px 10px; }
 .katalog-ocena:empty { display: none; }
 .opinia-form { display: grid; gap: 7px; margin-bottom: 8px; }
-.opinia-form label, .ustaw-serie label { display: grid; gap: 4px; }
-.opinia-form input, .opinia-form select, .katalog-opinie textarea, .porownanie-wybor select, .ustaw-serie select {
+.opinia-form label { display: grid; gap: 4px; }
+.opinia-form input, .opinia-form select, .katalog-opinie textarea {
   width: 100%; min-height: 44px; padding: 6px 8px; background: #141229; color: var(--tekst);
   border: 1px solid #8a6eb5; border-radius: 4px; font: inherit;
 }
-.porownanie-wybor label { display: grid; gap: 5px; }
+
 .opinia-status, #katalog-kopia-status { color: var(--arena-cyjan); }
-.ustaw-serie { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
-.ustaw-serie .opcja-serii { display: flex; align-items: center; gap: 7px; grid-column: 1/-1; min-height: 42px; }
+
+
 .opcja-serii input { inline-size: 22px; block-size: 22px; }
-.legendarna-promo {
-  background: linear-gradient(125deg,#412456,#251533 67%); border: 1px solid #cb7ec1;
-  border-left: 4px solid #ffb575; border-radius: 6px; padding: 14px;
-}
-.legendarna-promo strong { font: 800 italic 30px/1 var(--disp); }
-.legendarna-promo p { margin-block: 7px 12px; }
-.legendarna-akcje { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
 .t-specjalna, body[data-trud="specjalna"] { --acc: #ffc081; --acc-ink: #7e224f; --acc-rgb: 255,162,103; }
 .karta.t-specjalna { border-color: #ffa977; box-shadow: 0 0 24px -6px #ff8fc1aa; }
 .karta.t-specjalna .karta-gora { background: linear-gradient(140deg,#592c64,#301741 73%); }
@@ -301,18 +267,19 @@ input[type="range"] { width: 100%; min-height: 34px; accent-color: #bb8aff; }
   .wiedza-uklad { grid-template-columns: 1fr; }
   .wiedza-opcje { grid-template-columns: repeat(2,minmax(0,1fr)); }
   .wiedza-opcje button { font-size: 15px; }
-  .aktualnosci-grid, .ranking-uklad { grid-template-columns: 1fr; }
-  .porownanie-wynik label { grid-template-columns: minmax(0,1fr); }
+  .ranking-uklad { grid-template-columns: 1fr; }
+
+
 }
 @media (max-width: 430px) {
   .portal-menu { gap: 2px; }
   .portal-menu a { padding-inline: 5px; }
   .portal-bar-in { width: calc(100% - 16px); gap: 5px; }
-  .wybor-zabawy { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); }
-  .wybor-zabawy .btn-glowny { grid-column: 1/-1; }
-  .legendarna-akcje { grid-template-columns: 1fr; }
+
+
+
   .dwa-pola { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .arena-reticle, .model-svg, [data-wejscie], .portal-menu-wiecej { animation: none; }
+  .arena-reticle, [data-wejscie], .portal-menu-wiecej { animation: none; }
 }

@@ -1,0 +1,355 @@
+/* Ustawienia gry, katalog wyposażenia i sezon. */
+.wybor-start {
+  max-width: 840px;
+  margin-inline: auto;
+}
+.wybor-start .gra-tytul {
+  margin-bottom: 20px;
+  font-size: clamp(48px, 7vw, 86px);
+  background: linear-gradient(103deg, #f7f1ff 8%, #d4b0ff 39%, #f7f1ff 65%) 80% 0 / 160% 100%;
+  color: transparent;
+  background-clip: text;
+  animation: tytul-swiatlo .85s ease-out both;
+}
+@keyframes tytul-swiatlo {
+  from { background-position: 0; transform: translateY(8px) scale(.98); }
+  to { background-position: 100%; transform: none; }
+}
+.wybor-start-panel {
+  border: 1px solid #6e4999;
+  border-radius: 16px;
+  padding: clamp(13px, 3vw, 29px);
+  background: linear-gradient(148deg, #271740, #171429 46%, #191835);
+  box-shadow: inset 0 1px #e6aeff38, 0 13px 36px #07051665;
+}
+.wybor-start-cel { min-width: 0; margin: 0; padding: 0; border: 0; }
+.wybor-start-cel legend { color: #e3cbff; font-weight: 700; margin-bottom: 9px; }
+.wybor-start-kafelki, .wybor-start-pola {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 9px;
+}
+.wybor-start-kafelki label { position: relative; cursor: pointer; display: grid; min-width: 0; }
+.wybor-start-kafelki input { position: absolute; inset: auto auto 8px 8px; opacity: 0; }
+.wybor-start-kafelki span {
+  display: grid;
+  align-content: center;
+  min-height: 73px;
+  padding: 10px 12px;
+  gap: 3px;
+  border: 1px solid #8664aa;
+  border-radius: 10px;
+  background: #17142e;
+  transition: border-color .2s, background .2s, transform .2s;
+}
+.wybor-start-kafelki b { font: 800 italic clamp(19px, 4vw, 30px)/1.04 var(--disp); }
+.wybor-start-kafelki small { color: #e2d7f9; font-size: .85rem; line-height: 1.25; }
+.wybor-start-kafelki input:checked + span {
+  border-color: #f3bd88;
+  background: linear-gradient(133deg,#493175,#231a45);
+  box-shadow: inset 0 -2px #ff9c62;
+}
+.wybor-start-kafelki input:focus-visible + span { outline: 3px solid #ffcc9b; outline-offset: 3px; }
+.wybor-start-kafelki label:active span { transform: scale(.985); }
+.wybor-start-pola { margin-top: 15px; }
+.wybor-start-pola label, .arsenal-filtry label, .arsenal-porownaj label {
+  display: grid;
+  gap: 5px;
+  color: #e7d9fa;
+  font-size: .9rem;
+  font-weight: 700;
+  min-width: 0;
+}
+.wybor-start-pola select, .arsenal-filtry select, .arsenal-porownaj select {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid #785e99;
+  background: #111127 url("data:image/svg+xml,%3Csvg width='18' height='18' viewBox='0 0 18 18' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m5 7 4 4 4-4' stroke='%23e7d9fa' fill='none' stroke-width='1.6'/%3E%3C/svg%3E") right 7px center no-repeat;
+  padding: 8px 27px 8px 9px;
+  color: #fbf6ff;
+  font: inherit;
+}
+.wybor-start-opis { color: #d7cbe8; min-height: 2.3em; margin: 8px 0; }
+.wybor-start-cta { width: 100%; }
+.wybor-start-dodatki { display: grid; gap: 4px 12px; margin-top: 9px; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.wybor-start-dodatki details { min-width: 0; }
+.wybor-start-dodatki details[open] { grid-column: 1/-1; }
+.wybor-start-dodatki summary { color: #e2c7ff; cursor: pointer; min-height: 38px; padding-block: 9px; }
+.wybor-start-dodatki details p { margin: 4px 0; }
+.wybor-start-dodatki .gracze { margin: 6px 0; grid-template-columns: repeat(2,minmax(0,1fr)); }
+.wybor-start-dodatki .gracze:has([hidden]) { grid-template-columns: minmax(0,1fr); }
+.wybor-start-dodatki .opcja-serii { display: flex; align-items: center; gap: 7px; min-height: 42px; margin-block: 5px; }
+.wybor-start-legenda { color: #ffca9f; margin: 0 0 8px; }
+.wybor-start-legenda button { margin-inline-start: 5px; }
+@media (max-width: 359px) {
+  .wybor-start-kafelki span { padding-inline: 7px; }
+  .wybor-start-pola select { font-size: .82rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wybor-start .gra-tytul { animation: none; }
+  .wybor-start-kafelki span { transition: none; }
+}
+
+/* Zbrojownia */
+.arsenal-naglowek { margin-bottom: 21px; }
+.arsenal-filtry, .arsenal-pary {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.arsenal-uklad { display: grid; grid-template-columns: minmax(0,1fr) minmax(245px,.39fr); align-items: start; gap: 16px; }
+.arsenal-widok {
+  --rzad: #c8a7ff;
+  min-width: 0;
+  overflow: hidden;
+  scroll-margin-top: 85px;
+  border: 1px solid color-mix(in srgb, var(--rzad), #19122a 60%);
+  border-radius: 15px;
+  background: linear-gradient(146deg, #261841, #15142a 54%);
+}
+.rzad-zwykla { --rzad: #e0e3ee; }
+.rzad-niepospolita { --rzad: #8de3a5; }
+.rzad-rzadka { --rzad: #85c8ff; }
+.rzad-epicka { --rzad: #e0aaff; }
+.rzad-legendarna { --rzad: #ffc17d; }
+.rzad-mityczna { --rzad: #ffdf82; }
+.rzad-nieznana { --rzad: #c8badc; }
+.arsenal-gora {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  padding: 16px 18px 13px;
+}
+.arsenal-gora h2 { margin: 0; max-width: 22ch; font: 800 italic clamp(28px, 5vw, 54px)/.98 var(--disp); text-wrap: balance; }
+.arsenal-gora .znacznik { font: 700 .79rem/1.2 var(--font); color: #c8b9ed; }
+.arsenal-oryginal, .arsenal-status { color: #d8cbea; font-size: .85rem; margin: 6px 0 0; }
+.arsenal-status { text-align: right; }
+.arsenal-rzadkosc {
+  color: var(--rzad,#dcbbff);
+  font-weight: 700;
+  font-size: .91rem;
+  margin: 0;
+}
+.arsenal-gora .arsenal-rzadkosc {
+  padding: 5px 9px; border: 1px solid currentColor; border-radius: 7px;
+  background: color-mix(in srgb, var(--rzad), #1e1232 92%);
+  text-align: right;
+}
+.arsenal-galeria { margin: 0; }
+#arsenal-foto {
+  position: relative;
+  aspect-ratio: 1.8 / 1;
+  min-height: 135px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 57%, #312651, #120f26 76%);
+  border-block: 1px solid #594578;
+}
+.arsenal-powieksz {
+  position: absolute;
+  inset: 0;
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 100%; height: 100%;
+  padding: 0;
+  border: 0;
+  cursor: zoom-in;
+  background: transparent;
+  color: #fff;
+}
+.arsenal-powieksz:focus-visible { outline-offset: -4px; z-index: 2; }
+.arsenal-powieksz img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: center; animation: arsenal-foto-in .46s cubic-bezier(.2,.8,.2,1) both; }
+.arsenal-powieksz span {
+  position: absolute; bottom: 9px; right: 9px; font-weight: 700;
+  border: 1px solid #e0c0fa; border-radius: 7px; background: #151029ee; padding: 8px 11px;
+}
+@keyframes arsenal-foto-in {
+  from { opacity: .38; transform: translateY(8px) scale(1.045); }
+  to { opacity: 1; transform: translate(var(--mx,0),var(--my,0)) scale(1); }
+}
+.arsenal-brak { height: 100%; display: grid; place-items: center; padding: 14px; color: #e9dcff; text-align: center; }
+.arsenal-brak p { max-width: 38ch; margin: 0; }
+#arsenal-fotopis { color: #ded3ed; padding: 7px 15px; font-size: .83rem; min-height: 2.35rem; }
+.arsenal-widok a, .arsenal-porownaj a, .sezon-sekcja a, .sezon-archiwum a { color: #d5bcff; text-underline-offset: 3px; }
+.arsenal-ujecia { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 15px 0; }
+.arsenal-ujecia button {
+  flex: 1 0 auto; min-height: 44px; padding: 6px 8px; cursor: pointer;
+  border-radius: 8px; border: 1px solid #725794; background: #19122d;
+  color: #f3e6ff; font: 700 .91rem var(--font);
+}
+.arsenal-ujecia [aria-pressed=true] { border-color: var(--rzad); color: var(--rzad); background: #211938; }
+.arsenal-szczegoly { padding: 14px 15px 17px; }
+.arsenal-wariant { display: grid; gap: 5px; font-weight: 700; }
+.arsenal-wariant select {
+  width: 100%; min-height: 44px; min-width: 0; padding: 7px 9px;
+  border: 1px solid #7b619c; border-radius: 8px; background: #17122c; color: #fff; font: inherit;
+}
+.arsenal-szczegoly p { margin-block: 8px; }
+.arsenal-stan { color: #f0deff; }
+.arsenal-parametry, .arsenal-porady { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 7px; margin: 13px 0; }
+.arsenal-parametry div, .arsenal-porady div { background: #211a39; border: 1px solid #513c70; border-radius: 8px; padding: 8px; min-width: 0; }
+.arsenal-parametry dt, .arsenal-porady dt { color: #e6d7f9; font-size: .82rem; font-weight: 700; }
+.arsenal-parametry dd, .arsenal-porady dd { margin: 5px 0 0; overflow-wrap: anywhere; }
+.arsenal-parametry dd { color: var(--rzad); font-weight: 700; }
+.arsenal-zrodla { overflow-wrap: anywhere; }
+.arsenal-lista { min-width: 0; }
+.arsenal-lista h2, .arsenal-porownaj h2 { font: 800 italic 32px/1 var(--disp); margin: 0 0 6px; }
+#arsenal-karty { display: grid; gap: 6px; }
+.arsenal-karta, .sezon-przedmiot {
+  display: flex; align-items: center; min-width: 0; gap: 9px; padding: 5px;
+  background: #1d1731; border: 1px solid #604887; border-radius: 8px;
+  color: #faf0ff; text-decoration: none; transition: border-color .2s, transform .2s, background .2s;
+}
+.arsenal-karta:is(:hover,:focus-visible,[aria-current=true]), .sezon-przedmiot:is(:hover,:focus-visible) { border-color: var(--rzad,#e8aeff); background: #2d1e49; }
+.arsenal-karta:active,.sezon-przedmiot:active { transform: scale(.985); }
+.arsenal-karta strong,.sezon-przedmiot strong { display: block; font: 800 italic 20px/1.13 var(--disp); }
+.arsenal-karta small,.sezon-przedmiot small { display: block; color: #dccff0; }
+.arsenal-mini { display: grid; place-items: center; flex: 0 0 65px; height: 49px; min-width: 0; background: #261a47; border-radius: 5px; overflow: hidden; }
+.arsenal-mini img { width: 100%; height: 100%; object-fit: cover; }
+.arsenal-mini-brak { font-size: .75rem; text-align: center; color: #d7c4f4; }
+.arsenal-pusto { margin: 24px; }
+.arsenal-porownaj, .arsenal-przewodnik { margin-top: 19px; }
+.arsenal-pary,.arsenal-porownanie-panele { grid-template-columns: repeat(2,minmax(0,1fr)); }
+.arsenal-porownanie-panele { display: grid; gap: 8px; }
+.arsenal-porownanie-karta {
+  min-width: 0; background: #18132c;
+  border: 1px solid color-mix(in srgb, var(--rzad), #201335 62%); border-radius: 10px; padding: 10px;
+}
+.arsenal-porownanie-karta h3 { font: 800 italic clamp(20px,4vw,29px)/1.08 var(--disp); margin: 0 0 6px; }
+.arsenal-porownanie-karta dt { color: #e7d7fc; font-size: .84rem; }
+.arsenal-porownanie-karta dd { margin: 2px 0 9px; font-weight: 700; }
+.arsenal-belka {
+  display: block; width: 100%; height: 6px; margin: 5px 0 0; border-radius: 3px;
+  background: linear-gradient(90deg, var(--rzad) var(--dlugosc), #433258 var(--dlugosc));
+}
+.arsenal-przewodnik summary, .sezon-archiwum summary { color: #e3caff; font-weight: 700; cursor: pointer; }
+.arsenal-rodziny { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.arsenal-rodziny p { margin: 4px 0; }
+.arsenal-dialog {
+  width: min(94vw, 1080px); max-height: 91dvh; max-width: none;
+  border: 1px solid #a075d8; border-radius: 14px; padding: 11px; background: #171126; color: #fff;
+}
+.arsenal-dialog::backdrop { background: #080611e8; }
+.arsenal-dialog-gora { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.arsenal-dialog-gora h2 { margin: 0; font: 800 italic clamp(22px,4vw,34px)/1.1 var(--disp); }
+.arsenal-dialog-foto img { display: block; width: 100%; max-height: 72dvh; object-fit: contain; }
+
+/* Sezon */
+.portal-wrap[data-dzial=aktualnie] { padding-top: clamp(12px,2.2vw,32px); }
+.sezon-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: end;
+  min-height: clamp(425px,49vw,670px);
+  overflow: hidden;
+  border: 1px solid #aa6fd5;
+  border-radius: 19px;
+  background: #271840;
+}
+.sezon-hero picture,.sezon-hero picture img,.sezon-hero::after { position: absolute; inset: 0; width: 100%; height: 100%; }
+.sezon-hero picture { z-index: -2; }
+.sezon-hero picture img { object-fit: cover; object-position: center 51%; }
+.sezon-hero[data-wejscie=tak] picture img { animation: wyspa-zblizenie .95s cubic-bezier(.2,.75,.22,1) both; }
+.sezon-hero::after {
+  content: ""; z-index: -1; pointer-events: none;
+  background: linear-gradient(82deg,#141026f0 4%,#161029be 43%,#18113215 96%),linear-gradient(0deg,#100e22 0%,transparent 55%);
+}
+@keyframes wyspa-zblizenie { from { transform: scale(1.04); } to { transform: scale(1); } }
+.sezon-hero-copy { padding: clamp(17px, 4.6vw,68px); max-width: 660px; }
+.sezon-hero-copy .znacznik { color: #b7f7ff; }
+.sezon-hero-copy h1 {
+  color: #fff4ef; text-wrap: balance; margin: 0; font: 800 italic clamp(60px,10vw,130px)/.83 var(--disp);
+  text-shadow: 0 3px 30px #17102a;
+}
+.sezon-hero-copy h1 span {
+  display: inline-block;
+  color: #ffba7c;
+  animation: skarb-litery .74s cubic-bezier(.23,.85,.32,1) .1s both;
+}
+@keyframes skarb-litery { from { opacity: .35; transform: translateY(12px) skewX(4deg); } to { opacity: 1; transform: none; } }
+.sezon-hero-copy > p:not(.znacznik):not(.sezon-data) { color: #f7eefa; max-width: 34ch; margin: 18px 0 14px; }
+.sezon-hero-copy a { color: #f3c6ff; font-weight: 700; text-underline-offset: 4px; }
+.sezon-hero-info { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 5px; }
+.sezon-hero-info span { border: 1px solid #deb8ef; border-radius: 6px; padding: 5px 8px; background: #231838e3; color: #fff3ff; font-size: .86rem; font-weight: 700; }
+.sezon-data { color: #e4d9f5; font-size: .86rem; margin: 5px 0; }
+.sezon-sekcja { margin-top: clamp(27px,5vw,59px); }
+.sezon-sekcja header { margin-bottom: 13px; }
+.sezon-sekcja h2 {
+  margin: 0;
+  font: 800 italic clamp(38px,6vw,63px)/.97 var(--disp);
+  color: #fdf3ff;
+}
+.sezon-pola, .sezon-playlisty, .sezon-sprzet { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 11px; }
+.sezon-sprzet { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.sezon-pola .sezon-miejsce {
+  padding: 0;
+  overflow: hidden;
+  position: relative;
+  background: #1b1534;
+}
+.sezon-miejsce::after {
+  content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; pointer-events: none;
+  background: linear-gradient(90deg,#df7eff,#6057f9,#42e4ff);
+  transform-origin: left;
+}
+.sezon-miejsce[data-wejscie=tak]::after { animation: pas-odkrywcy .8s ease-out both; }
+@keyframes pas-odkrywcy { from { transform: scaleX(.25); } to { transform: scaleX(1); } }
+.sezon-miejsce > img { display: block; width: 100%; height: auto; aspect-ratio: 2.1 / 1; object-fit: cover; }
+.sezon-miejsce > div { padding: 13px 17px; }
+.sezon-sekcja h3 { margin: 4px 0 7px; font: 800 italic clamp(25px,4.5vw,38px)/1.03 var(--disp); }
+.sezon-sekcja article p:not(.znacznik) { margin: 8px 0; }
+.sezon-sprzet .sezon-przedmiot { color: #fff; }
+.sezon-os { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.sezon-os li { display: grid; grid-template-columns: auto minmax(0,1fr); gap: 11px; border-left: 2px solid #ac75f0; padding: 9px 10px; background: #1c1534; }
+.sezon-os li > span { color: #ffb97d; font-weight: 700; min-width: 3.25em; }
+.sezon-os li p { margin: 0 0 4px; }
+.sezon-archiwum { margin-top: 22px; }
+.sezon-archiwum li + li { margin-top: 9px; }
+
+@media (max-width: 800px) {
+  .arsenal-uklad { grid-template-columns: minmax(0,1fr); }
+  #arsenal-karty { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .sezon-sprzet { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (max-width: 585px) {
+  .arsenal-filtry { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px; }
+  .arsenal-gora { padding: 13px 10px; gap: 6px; }
+  .arsenal-gora h2 { font-size: clamp(26px,8vw,43px); }
+  .arsenal-gora .arsenal-rzadkosc { max-width: 13ch; padding: 4px 6px; font-size: .81rem; }
+  .arsenal-parametry { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .arsenal-porady { grid-template-columns: 1fr; }
+  .arsenal-mini { flex-basis: 49px; height: 41px; }
+  .arsenal-karta strong,.sezon-przedmiot strong { font-size: 18px; overflow-wrap: anywhere; }
+  .arsenal-karta small,.sezon-przedmiot small { font-size: .8rem; }
+  .arsenal-rodziny { grid-template-columns: minmax(0,1fr); }
+  .sezon-hero { min-height: 480px; }
+  .sezon-hero picture img { object-position: 54% 0; }
+  .sezon-hero::after { background: linear-gradient(0deg,#111025 3%,#141128ea 33%,#15142d54 67%,transparent 98%); }
+  .sezon-hero-copy h1 { font-size: clamp(55px,16vw,76px); }
+  .sezon-pola, .sezon-playlisty { grid-template-columns: minmax(0,1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arsenal-powieksz img, .sezon-hero picture img, .sezon-hero-copy h1 span, .sezon-miejsce[data-wejscie=tak]::after { animation: none; }
+  .arsenal-karta,.sezon-przedmiot { transition: none; }
+}
+
+.portal-cta .btn-glowny { position: relative; isolation: isolate; }
+.portal-cta .btn-glowny::after, .kolumna.na-szczycie::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transform: translateX(-105%);
+  background: linear-gradient(102deg, transparent 35%, #ffebcf89 49%, transparent 64%);
+}
+.portal-cta .btn-glowny:is(:hover,:focus-visible)::after { animation: pokaz-refleks .52s ease-out; }
+.kolumna.na-szczycie::after { animation: pokaz-refleks .83s ease-out .35s both; }
+@keyframes pokaz-refleks { to { transform: translateX(105%); } }
+html.ukryta :is(.wybor-start .gra-tytul, .arsenal-powieksz img, .sezon-hero picture img, .sezon-hero-copy h1 span),
+html.ukryta .kolumna.na-szczycie::after { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .portal-cta .btn-glowny:is(:hover,:focus-visible)::after,.kolumna.na-szczycie::after { animation: none; }
+}

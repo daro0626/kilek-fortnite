@@ -44,7 +44,28 @@ Jeśli któryś punkt się nie potwierdzi, usuń tę kartę z `MISJE` albo zosta
 |---|---|---|
 | Treści fanowskie są dozwolone bez celu zarobkowego (1.4), bez sugerowania poparcia Epic (1.6), bez wyglądu oficjalnej strony (1.8). Wymagany dopisek (1.10): „Portions of the materials used are trademarks and/or copyrighted works of Epic Games, Inc. All rights reserved by Epic. This material is not official and is not endorsed by Epic.” Znaki (np. „Fortnite”) tylko do opisu gry, nie do nazwania własnej treści; w nazwie strony tylko, gdy nazwa jasno mówi, że strona jest nieoficjalna (1.11). | https://legal.epicgames.com/epicgames/fan-art-policy | 2026-11-23 |
 
-Strona nie używa logo, czcionek, grafik, postaci ani dźwięków z Fortnite. Autorskie grafiki, schematy i scena są rysowane w kodzie `grafika.js`, `mapa-rys.js`, `dzialy.js` i `arena.js`.
+Strona jest bezpłatna i niekomercyjna. Zasady użycia materiałów Epic wyjaśnia także [pomoc techniczna Epic po polsku](https://www.epicgames.com/help/c-36624475/c-35761596/a25498694?lang=pl). Grafiki portalu, karty wyzwań i arena mają autorską oprawę. Footer z wymaganym dopiskiem jest wspólny dla wszystkich działów.
+
+## Łowcy Skarbów i dane Zbrojowni
+
+- Wersje sezonu, mapa 80 graczy, mechanika skrzyń i kalendarz pochodzą z oficjalnej zapowiedzi Epic oraz aktualizacji 43.10. Stan odczytu 23.11.2026. [Zapowiedź](https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time) · [Szczegółowy wpis po polsku](https://communities.epicgames.com/thread/set-sail-for-fortnite-treasure-hunters-the-greatest-adventure-of-all-time/Pmud?lang=pl) · [Aktualizacja 43.10](https://communities.epicgames.com/thread/v43-10-fortnite-treasure-hunters-update-notes/CoOG)
+- Liczby dla puli Battle Royale odczytano według rzadkości 23.11.2026. Źródło wtórne jest podane przy tabeli oraz przy porównaniu każdego wariantu. Warianty z Reaktywacji i Blitz mają oddzielny zakres, oparty o notatki Epic dla wersji 43.00. [Pistolet](https://fortnite.gg/weapons/weapon/flint-knock-pistol?mode=battle-royale) · [Karabin naleśnikowy](https://fortnite.gg/weapons/weapon/flapjack-rifle?mode=battle-royale) · [Młot](https://fortnite.gg/weapons/weapon/hammer-assault-rifle?mode=battle-royale) · [Gilded Dragoon](https://fortnite.gg/weapons/weapon/gilded-dragoon-shotgun?mode=battle-royale) · [Bundlebuss](https://fortnite.gg/weapons/weapon/bundlebuss-repeater-rifle?mode=battle-royale)
+- Archiwalne warianty pistoletu opisują stan z jego premiery 20.03.2019. [Oficjalne notatki v8.11](https://www.fortnite.com/news/patch-notes-v8-11)
+
+### Obrazy
+
+Twórcą i publikującym poniższe materiały jest Epic Games. Źródła sprawdzono 23.11.2026. Obrazy mają lokalne kopie WebP. Render broni jest kadrowany i wykorzystywany w dużym rozmiarze oraz jako pomniejszenie. Ujęcia wyspy pochodzą z zapowiedzi sezonu.
+
+| Plik w `assets/fortnite/` | Rodzaj materiału | Pochodzenie |
+| --- | --- | --- |
+| `flint-render.webp`, `flint-mini.webp` | Render pistoletu z premiery v8.11 | [Publikacja Epic](https://www.fortnite.com/news/patch-notes-v8-11) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmw95vjcx0b9a06n4k23e6ygk) |
+| `hammer-render.webp`, `hammer-mini.webp` | Render karabinu Młot z sezonu Vibin’ | [Publikacja Epic](https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-3-season-3-vibin?lang=en-US) · [Plik Epic](https://cdn2.unrealengine.com/fortnite-hammer-assault-rifle-1900x600-3a992cfe78e2.jpg) |
+| `flapjack-render.webp`, `flapjack-mini.webp` | Render karabinu naleśnikowego z sezonu Wilds | [Publikacja Epic](https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-4-season-3-wilds?lang=en-US) · [Plik Epic](https://cdn2.unrealengine.com/fortnite-flapjack-rifle-1900x600-98e2ae8f7af5.jpg) |
+| `wyspa-port.webp`, `wyspa-port-mobile.webp` | Widok zabudowań nad wodą | [Publikacja Epic](https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmvr484lv2gci07n1iliazrdd) |
+| `wyspa-kosci.webp` | Widok skalistego wybrzeża i czaszki | [Publikacja Epic](https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmvr4845f2gss06og2m8iwecf) |
+| `wyspa-fort.webp` | Widok zabudowań po zmroku | [Publikacja Epic](https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmvr484gu2gt806og21ybi37n) |
+
+Miniatury listy pokazują pomniejszone rendery prasowe. Brakuje potwierdzonych ikon ekwipunku i ujęć przedmiotu w rękach albo na ziemi dla prezentowanych wariantów. Dla Gilded Dragoon, Bundlebussa, Wyścigówy Usoppa i Wybuchowej kuli armatniej brakuje także dużych renderów dostępnych do publikacji na ustalonych zasadach. Przy materiałach One Piece trzeba zachować prawa właścicieli crossoveru.
 
 ## Czcionki
 | Czcionka | Licencja | Plik |
