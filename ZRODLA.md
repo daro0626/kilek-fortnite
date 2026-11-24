@@ -54,18 +54,23 @@ Strona jest bezpłatna i niekomercyjna. Zasady użycia materiałów Epic wyjaśn
 
 ### Obrazy
 
-Twórcą i publikującym poniższe materiały jest Epic Games. Źródła sprawdzono 23.11.2026. Obrazy mają lokalne kopie WebP. Render broni jest kadrowany i wykorzystywany w dużym rozmiarze oraz jako pomniejszenie. Ujęcia wyspy pochodzą z zapowiedzi sezonu.
+Twórcą i publikującym poniższe materiały jest Epic Games. Źródła renderów sprawdzono 24.11.2026. [Rejestr używany przez galerię](js/sprzet-media.js) przechowuje też typ ujęcia, zakres wariantu, playlistę, plik i podstawę użycia. Obrazy mają lokalne kopie WebP. Render broni jest kadrowany i wykorzystywany w dużym rozmiarze oraz jako pomniejszenie. Ujęcia wyspy pochodzą z zapowiedzi sezonu.
 
 | Plik w `assets/fortnite/` | Rodzaj materiału | Pochodzenie |
 | --- | --- | --- |
 | `flint-render.webp`, `flint-mini.webp` | Render pistoletu z premiery v8.11 | [Publikacja Epic](https://www.fortnite.com/news/patch-notes-v8-11) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmw95vjcx0b9a06n4k23e6ygk) |
 | `hammer-render.webp`, `hammer-mini.webp` | Render karabinu Młot z sezonu Vibin’ | [Publikacja Epic](https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-3-season-3-vibin?lang=en-US) · [Plik Epic](https://cdn2.unrealengine.com/fortnite-hammer-assault-rifle-1900x600-3a992cfe78e2.jpg) |
 | `flapjack-render.webp`, `flapjack-mini.webp` | Render karabinu naleśnikowego z sezonu Wilds | [Publikacja Epic](https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-4-season-3-wilds?lang=en-US) · [Plik Epic](https://cdn2.unrealengine.com/fortnite-flapjack-rifle-1900x600-98e2ae8f7af5.jpg) |
+| `furia-oscara-render.webp`, `furia-oscara-mini.webp` | Kadr broni z oficjalnej zapowiedzi Battle Royale, Dzień Kapitana 22.11.2026 | [Ogłoszenie Epic](https://communities.epicgames.com/thread/captains-day-oscar-november-22/eOQD) · [Plik Epic](https://communities.epicgames.com/api/community/image/9bba47c6-235c-4ec6-8da5-e194d8541d4e?resizingType=fit&width=2048&height=1152) |
 | `wyspa-port.webp`, `wyspa-port-mobile.webp` | Widok zabudowań nad wodą | [Publikacja Epic](https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmvr484lv2gci07n1iliazrdd) |
 | `wyspa-kosci.webp` | Widok skalistego wybrzeża i czaszki | [Publikacja Epic](https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmvr4845f2gss06og2m8iwecf) |
 | `wyspa-fort.webp` | Widok zabudowań po zmroku | [Publikacja Epic](https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time) · [Plik Epic](https://cms-assets.unrealengine.com/cm6l5gfpm05kr07my04cqgy2x/cmvr484gu2gt806og21ybi37n) |
 
-Miniatury listy pokazują pomniejszone rendery prasowe. Brakuje potwierdzonych ikon ekwipunku i ujęć przedmiotu w rękach albo na ziemi dla prezentowanych wariantów. Dla Gilded Dragoon, Bundlebussa, Wyścigówy Usoppa i Wybuchowej kuli armatniej brakuje także dużych renderów dostępnych do publikacji na ustalonych zasadach. Przy materiałach One Piece trzeba zachować prawa właścicieli crossoveru.
+Miniatury listy pokazują pomniejszone rendery prasowe. Brakuje potwierdzonych ikon ekwipunku i ujęć przedmiotu w rękach albo na ziemi dla prezentowanych wariantów. Dla Gilded Dragoon, Bundlebussa, Wyścigówy Usoppa i Wybuchowej kuli armatniej brakuje także dużych renderów dostępnych do publikacji na ustalonych zasadach. Przy materiałach One Piece trzeba zachować prawa właścicieli crossoveru. Każdy z ośmiu przedmiotów wymaga osobnego kadru ekwipunku z nazwą, widoczną rzadkością i trybem oraz osobnego kadru w rękach postaci lub jako łup. Ujęcia z potwierdzoną rzadkością należy przypisać do identyfikatora wariantu.
+
+Rzadkość wynika z danych karty. UI używa szarości, zieleni, błękitu, fioletu i odcieni złota, a mityczną dodatkowo opisuje tekstem o sześciu gwiazdkach. [Epic o poziomach i gwiazdkach](https://dev.epicgames.com/documentation/en-us/fortnite/fortnite-weapons-primer)
+
+Sezon sprawdzono ponownie 24.11.2026, w tym Dzień Kapitana Oscara i zapowiedź Złotego Tygodnia w Battle Royale od 28.11 do finału 5.12. Opublikowane wcześniej statystyki konkretnych wariantów mają nadal datę ich odczytu. [Ogłoszenie o Oscarze](https://communities.epicgames.com/thread/captains-day-oscar-november-22/eOQD) · [Złoty Tydzień](https://communities.epicgames.com/thread/golden-week-starts-november-28/MuNA)
 
 ## Czcionki
 | Czcionka | Licencja | Plik |

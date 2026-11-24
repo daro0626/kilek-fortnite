@@ -7,6 +7,7 @@ const etykietyUjec = { render: 'Render Epic', ikona: 'Ekwipunek', gra: 'W meczu'
 const nazwyZrodel = {
   sezon: 'Epic · start sezonu', br: 'Epic · aktualizacja 43.10', reload: 'Epic · Reaktywacja 43.00',
   blitz: 'Epic · Blitz 43.00', flint: 'Epic · render v8.11', hammer: 'Epic · render Vibin’', flap: 'Epic · render Wilds',
+  oscar: 'Epic · Dzień Kapitana Oscara',
 };
 const para = SPRZET.flatMap(s => s.warianty.map(w => ({ s, w })));
 const klucz = ({ s, w }) => s.id + '/' + w.id;
@@ -69,7 +70,7 @@ function porownanie(root) {
         return `<div><dt>${nazwa}${opis}</dt><dd>${Number.isFinite(p) ? liczba.format(p) + j : 'Brak potwierdzonych danych'}
             ${mozna ? `<span class="arsenal-belka" aria-hidden="true" style="--dlugosc:${100*p/Math.max(p,inne,1)}%"></span>` : ''}</dd></div>`;
       }).join('')}</dl>
-      <p class="nota">Sprawdzono ${WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
+      <p class="nota">Sprawdzono ${w.sprawdzono ?? WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
     </section>`).join('')}</div>`;
 }
 
@@ -137,7 +138,7 @@ export function zbrojownia(root, [przedmiot, idWariantu] = []) {
         </label>
         <p>${s.opis}</p><p class="arsenal-stan"><strong>${zakres(w)}</strong> · ${w.nota}</p>
         ${statystyki(w)}
-        <p class="nota">Sprawdzono ${WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
+        <p class="nota">Sprawdzono ${w.sprawdzono ?? WERYFIKACJA} · ${zrodlo(w.zrodlo, w.nazwaZrodla)}</p>
         <dl class="arsenal-porady"><div><dt>Zaleta</dt><dd>${s.zalety}</dd></div>
           <div><dt>Ograniczenie</dt><dd>${s.ograniczenia}</dd></div><div><dt>Jak używać</dt><dd>${s.wskazowka}</dd></div></dl>
         <p class="arsenal-zrodla">${s.oficjalne.map(z => zrodlo(ZRODLA_SPRZETU[z], nazwyZrodel[z])).join(' · ')}</p>

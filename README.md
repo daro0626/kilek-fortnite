@@ -9,11 +9,11 @@ Nieoficjalny portal fanowski o Fortnite. Obejmuje Start, Wyzwania, Katalog misji
 - **„Wygraj bez broni”** jest dostępna w katalogu i pod linkiem **Wybierz konkretną misję**. Solo ma jeden wynik, rywale mogą osobno zdobyć po 25 pkt, a drużyna dostaje jeden wspólny wynik 25 pkt. Kartę można wybrać jako samodzielną rozgrywkę albo raz w serii.
 - Katalog zawiera **112 zwykłych kart i jedną legendarną**. Wyszukiwanie i filtry obejmują trudność, kategorię, Build/Zero Build i Solo/Duo. Oceny i notatki można zapisać lokalnie i skopiować z katalogu.
 - Ukończone rundy zachowują ID, wersję reguł, treść, trudność i wartość. Zapis v1/v2 jest odczytywany z dawnym przelicznikiem 1 pkt i oznaczeniem **legacy**. Migracja v3 do v4 zachowuje treść karty, ustawienia aktywnej gry, punktację i historię.
-- Wyniki są wpisywane ręcznie. Aktywna gra, historia, rankingi, odznaki i opinie pozostają w tej przeglądarce. Reset w **Zasady i zapis → Zapis i prywatność** usuwa tylko dane KILEK CHALLENGE.
+- **Od nowa** działa na Starcie i w trakcie gry. Po potwierdzeniu otwiera wybór nowej gry i zachowuje ukończone rundy. Wyniki są wpisywane ręcznie. Aktywna gra, historia, rankingi, odznaki i opinie pozostają w tej przeglądarce. Reset w **Zasady i zapis → Zapis i prywatność** usuwa tylko dane KILEK CHALLENGE.
 
 ## Zawartość i oprawa
 
-Zbrojownia zawiera konkretne przedmioty i warianty. Można filtrować po okresie, rodzaju, playliście i rzadkości, porównywać parametry dwóch wariantów oraz powiększać dostępne rendery Epic. Osobny poradnik zachowuje 12 opisów rodzin sprzętu. Brakujące ujęcia ekwipunku, meczu i liczb pokazujemy jawnie. [Źródła i wykaz obrazów](ZRODLA.md)
+Zbrojownia zawiera konkretne przedmioty i warianty. Można filtrować po okresie, rodzaju, playliście i rzadkości, porównywać parametry dwóch wariantów oraz powiększać dostępne rendery Epic. Osobny poradnik zachowuje 12 opisów rodzin sprzętu. Lista oddziela karty z obrazem od opisów bez zdjęć. Galeria oferuje tylko zweryfikowane ujęcia. Rzadkość opisuje wybrany wariant, a render pokazuje wygląd modelu. [Źródła i wykaz obrazów](ZRODLA.md)
 
 **Aktualny sezon** opisuje Łowców Skarbów, Wyspę Kościotrupów, Dni Kapitanów, zmiany łupów i różnice playlist. Karty przedmiotów prowadzą do odpowiadających wpisów w Zbrojowni. Na stronie są daty ręcznej weryfikacji i odnośniki do materiałów Epic.
 

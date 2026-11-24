@@ -1,3 +1,5 @@
+import { EPIC } from './wiedza-dane.js';
+
 // Katalog referencyjny materiałów, z którego powstaje galeria Zbrojowni.
 export const POLITYKA_EPIC = 'https://legal.epicgames.com/epicgames/fan-art-policy';
 
@@ -19,6 +21,12 @@ const renderyEpic = [
     zrodlo: 'https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-4-season-3-wilds?lang=en-US',
     oryginal: 'https://cdn2.unrealengine.com/fortnite-flapjack-rifle-1900x600-98e2ae8f7af5.jpg',
     rozmiar: [1000, 564], miniatura: [270, 152],
+  },
+  {
+    przedmiot: 'furia-oscara', publikacja: 'Dzień Kapitana Oscara · 22.11.2026',
+    zrodlo: EPIC.oscar,
+    oryginal: 'https://communities.epicgames.com/api/community/image/9bba47c6-235c-4ec6-8da5-e194d8541d4e?resizingType=fit&width=2048&height=1152',
+    rozmiar: [460, 320], miniatura: [270, 188],
   },
 ];
 

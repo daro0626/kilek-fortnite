@@ -1,10 +1,10 @@
 import { AKTUALNOSCI, EPIC } from './wiedza-dane.js';
-import { PLAYLISTY, SPRZET, WERYFIKACJA } from './sprzet-dane.js';
+import { PLAYLISTY, SPRZET } from './sprzet-dane.js';
 import { miniaturaSprzetu } from './zbrojownia.js';
 
 const zapowiedz = 'https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time';
 const link = (url, tekst) => `<a href="${url}">${tekst}</a>`;
-const sprawdzono = `<p class="sezon-data">Ostatnia weryfikacja ${WERYFIKACJA}</p>`;
+const sprawdzono = '<p class="sezon-data">Ostatnia weryfikacja 24.11.2026</p>';
 const szczegoly = [
   ['Wyspa Kościotrupów', 'Fortuna, porty i ukryte przejścia', 'Crossbones Isle ma mecze dla 80 graczy. W Fort Fortuna szukaj łupu w bastionach. Na Captain’s Cenote wypatruj zapadliska z basenem.', 'wyspa-kosci', 'Skaliste wybrzeże Wyspy Kościotrupów i wielka czaszka', EPIC.sezon],
   ['Ślad ukrytego skarbu', 'List gończy prowadzi dalej', 'Rozglądaj się za listem gończym na ścianie. Zerwanie listu daje Duszkową Mapę Skarbów, która prowadzi do zakopanej skrzyni. W aktualizacji 43.10 Epic poprawił końcowe uderzenie przy odkopywaniu.', 'wyspa-fort', 'Zabudowania na Wyspie Kościotrupów po zmroku', EPIC.sezon],
@@ -13,8 +13,9 @@ const osCzasu = [
   ['01.11','Start Łowców Skarbów','Nowa wyspa, armaty i współpraca z One Piece. Epic zapowiedział rotacje sprzętu w ramach Dni Kapitana.', zapowiedz],
   ['12.11','Buggy i zmiana łupów','W v43.10 broń pokonanego bossa wypada gwarantowanie. Część egzotycznych broni może pojawiać się w skrzyniach.', EPIC.br],
   ['15.11','Dzień Kapitana w Friendship Villa','Epic podał powrót karabinu naleśnikowego, pojawienie się Leekcappera i trzeci fragment mapy.', EPIC.br],
-  ['22.11','Dzień Kapitana Oscara','W zapowiedzi tej odsłony Epic wskazał okręt Oscara oraz jego automatyczną strzelbę Furia.', EPIC.sezon],
-  ['05.12','Zapowiedziany finał rozdziału 7','W oficjalnym ogłoszeniu Epic wskazał tę datę dla wydarzenia kończącego rozdział.', zapowiedz],
+  ['22.11','Dzień Kapitana Oscara','Epic zapowiedział Oscara na The Tiger’s Eye. Jego strzelba Furia i duszek Sir Oscar II pojawiły się w ogłoszeniu wydarzenia.', EPIC.oscar],
+  ['28.11','Start Złotego Tygodnia','Epic zapowiedział w Battle Royale powrót złotych nagród ze wcześniejszych tygodni. Wydarzenie rusza o 15:00 czasu polskiego i potrwa do finału rozdziału.', EPIC.zlotyTydzien],
+  ['05.12','Zapowiedziany finał rozdziału 7','Epic zapowiedział finał i Złoty Dzień Społeczności. Godzina 15:00 w ogłoszeniu dotyczy startu nagród dnia.', EPIC.zlotyTydzien],
 ];
 const playlisty = [
   ['br','Wyspa, armaty i skrzynie', 'Na Wyspie Kościotrupów wracają niektóre bronie, a skrzynie z czasem uzupełniają łup. Epic podał, że sztabki złota wycofano. W v43.10 zmieniły się też nagrody od bossów.', EPIC.sezon],
@@ -25,7 +26,7 @@ const playlisty = [
 
 export function sezon(root) {
   if (root.firstElementChild) return;
-  const kolekcja = ['flapjack','flint','hammer','dragoon','bundlebuss','usopp','kula'].map(id => SPRZET.find(s => s.id === id));
+  const kolekcja = ['furia-oscara','flapjack','flint','hammer','dragoon','bundlebuss','usopp','kula'].map(id => SPRZET.find(s => s.id === id));
   root.innerHTML = `
   <section class="sezon-sekcja" aria-labelledby="sezon-miejsca">
     <header><h2 id="sezon-miejsca">Co odkryjesz na wyspie</h2>${sprawdzono}</header>

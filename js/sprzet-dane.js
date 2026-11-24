@@ -14,6 +14,7 @@ export const ZRODLA_SPRZETU = {
   br: EPIC.br,
   reload: EPIC.reload,
   blitz: EPIC.blitz,
+  oscar: EPIC.oscar,
   flint: 'https://www.fortnite.com/news/patch-notes-v8-11',
   hammer: 'https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-3-season-3-vibin?lang=en-US',
   flap: 'https://www.fortnite.com/news/whats-new-in-fortnite-battle-royale-chapter-4-season-3-wilds?lang=en-US',
@@ -110,6 +111,20 @@ export const SPRZET = [
       ], [50,100]),
       zloteZrzuty('mityczna'),
     ],
+  },
+  {
+    id: 'furia-oscara', nazwa: 'Strzelba automatyczna Furia Oscara', oryginal: 'Oscar’s Frenzy Auto Shotgun', typ: 'Strzelba',
+    opis: 'Strzelba wskazana przez Epic jako nagroda związana z Dniem Kapitana Oscara.',
+    zalety: 'Automatyczny tryb strzelania sprawdza się przy krótkim dystansie.',
+    ograniczenia: 'Epic nie podał w ogłoszeniu parametrów tej odmiany ani bieżącej rotacji.',
+    wskazowka: 'W notatce wydarzenia Oscar pilnował The Tiger’s Eye. Dostępność sprawdź w Battle Royale.',
+    oficjalne: ['oscar'],
+    warianty: [{
+      id: 'br-oscar', rzadkosc: 'nieznana', tryby: ['br'], status: 'potwierdzony',
+      wersja: 'Łowcy Skarbów · Dzień Kapitana 22.11',
+      nota: 'Potwierdzona w ogłoszeniu wydarzenia. Bieżąca rotacja wymaga sprawdzenia.',
+      zrodlo: EPIC.oscar, nazwaZrodla: 'Epic · Dzień Kapitana Oscara', sprawdzono: '24.11.2026',
+    }],
   },
   {
     id: 'dragoon', nazwa: 'Strzelba Gilded Dragoon', oryginal: 'Gilded Dragoon Shotgun', typ: 'Strzelba',

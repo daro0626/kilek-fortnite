@@ -4,6 +4,8 @@ export const EPIC = {
   reload: 'https://communities.epicgames.com/thread/fortnite-reload-43-00-update-notes/oxqw?lang=pl',
   reloadNowe: 'https://communities.epicgames.com/thread/fortnite-reload-43-10-update-notes/SWuy',
   blitz: 'https://communities.epicgames.com/thread/v43-00-blitz-royale-update-notes/RnOd',
+  oscar: 'https://communities.epicgames.com/thread/captains-day-oscar-november-22/eOQD',
+  zlotyTydzien: 'https://communities.epicgames.com/thread/golden-week-starts-november-28/MuNA',
   zasady: 'https://www.fortnite.com/@epic/battle-royale',
 };
 

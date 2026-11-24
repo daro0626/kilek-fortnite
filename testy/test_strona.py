@@ -469,7 +469,7 @@ def dzialy_i_opinie(browser):
         misja = karta_id(page)
         dzial(page, 'zbrojownia', dotyk)
         bez_przewijania_w_bok(page, f'zbrojownia {w}')
-        expect(page.locator('#arsenal-karty a')).to_have_count(7)
+        expect(page.locator('#arsenal-karty a')).to_have_count(8)
         expect(page.locator('#arsenal-widok h2')).to_have_text('Pistolet krzemieniowy')
         assert page.evaluate("document.querySelector('.arsenal-gora .znacznik').getBoundingClientRect().bottom <= document.querySelector('.arsenal-gora h2').getBoundingClientRect().top")
         page.wait_for_function("document.querySelector('#arsenal-foto img').naturalWidth > 500")
@@ -519,6 +519,8 @@ def dzialy_i_opinie(browser):
         expect(page.locator('.sezon-hero h1')).to_have_text('Łowcy Skarbów')
         assert page.evaluate("document.querySelector('.sezon-hero .znacznik').getBoundingClientRect().bottom <= document.querySelector('.sezon-hero h1').getBoundingClientRect().top")
         expect(page.locator('.sezon-playlisty article')).to_have_count(4)
+        expect(page.locator('.sezon-hero .sezon-data')).to_contain_text('24.11.2026')
+        expect(page.locator('.sezon-os li').filter(has_text='Start Złotego Tygodnia').locator('a')).to_have_attribute('href', re.compile('MuNA'))
         expect(page.locator('.sezon-hero img')).to_be_visible()
         klik(page, '.sezon-przedmiot[href="#zbrojownia/flapjack"]', dotyk)
         expect(page.locator('#arsenal-widok h2')).to_have_text('Karabin naleśnikowy')
@@ -616,16 +618,16 @@ def zbrojownia_zrodla_i_rzadkosci(browser):
     page.goto(URL + '#zbrojownia')
     obrazy = page.locator('.arsenal-grupa').filter(has=page.get_by_role('heading', name='Z obrazem'))
     opisy = page.locator('.arsenal-grupa').filter(has=page.get_by_role('heading', name='Opisy bez zdjęć'))
-    expect(obrazy.locator('a img')).to_have_count(3)
+    expect(obrazy.locator('a img')).to_have_count(4)
     expect(opisy.locator('a')).to_have_count(4)
     expect(opisy.locator('img')).to_have_count(0)
 
-    for id in ('flint', 'hammer', 'flapjack'):
+    for id in ('flint', 'hammer', 'flapjack', 'furia-oscara'):
         page.goto(URL + '#zbrojownia/' + id)
         expect(page.locator('#arsenal-foto img')).to_have_attribute('src', f'assets/fortnite/{id}-render.webp')
         page.locator('#arsenal-foto img').evaluate('(img) => img.decode()')
         expect(page.locator('#arsenal-fotopis')).to_contain_text('Render referencyjny')
-        expect(page.locator('#arsenal-fotopis a')).to_have_attribute('href', re.compile(r'https://www\.fortnite\.com/'))
+        expect(page.locator('#arsenal-fotopis a')).to_have_attribute('href', re.compile(r'https://(?:www\.fortnite\.com|communities\.epicgames\.com)/'))
         expect(page.locator('[data-ujecie]')).to_have_count(0)
 
     page.goto(URL + '#zbrojownia/hammer/br-rzadka')
@@ -650,7 +652,7 @@ def zbrojownia_zrodla_i_rzadkosci(browser):
     expect(page.locator('.arsenal-stan')).to_contain_text('Blitz Royale')
     assert not bledy, bledy
     ctx.close()
-    ok('trzy autentyczne rendery, źródła, trzy kolory rzadkości i opisy bez pustych galerii')
+    ok('cztery autentyczne rendery, źródła, trzy kolory rzadkości i opisy bez pustych galerii')
 
 
 def od_nowa_i_tryb_gry(browser):
