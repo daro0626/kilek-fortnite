@@ -1,21 +1,23 @@
 # KILEK CHALLENGE
 
-Nieoficjalny portal fanowski o Fortnite. Obejmuje Start, Wyzwania, Katalog misji, Zbrojownię, Akademię, Turnieje i wyniki oraz datowane informacje o grze. Działa jako statyczna strona GitHub Pages. [Otwórz portal](https://daro0626.github.io/kilek-fortnite/)
+Nieoficjalny portal fanowski o Fortnite. Obejmuje Start, Wyzwania, Katalog misji, Zbrojownię, Akademię, Turnieje i wyniki oraz przewodnik po aktualnym sezonie. Działa jako statyczna strona GitHub Pages. [Otwórz portal](https://daro0626.github.io/kilek-fortnite/)
 
 ## Rozgrywka
 
-- **Graj od razu** uruchamia swobodne losowanie bez punktów. W **Wyzwaniach** można ustawić pojedynek, wspólny duet, Build lub Zero Build, Solo albo Duo, 3/5/10 rund albo serię bez limitu. Wspólny duet ustawia skład Duo.
+- **Szybkie wyzwanie** losuje kartę bez punktów. **Turniej na punkty** ma 3, 5, 10 rund lub działa bez limitu. Solo ma jeden wynik, osobne mecze mają dwa indywidualne wyniki, a jeden wspólny mecz ma jeden wynik drużyny. Wybór wspólnego meczu automatycznie używa składu Duo. Build i Zero Build wybiera się osobno.
 - Zwykłe karty dają **1, 3, 5, 7 lub 10 pkt** za zaliczenie. Brak zaliczenia daje 0. Przy zmianie trudności punkty poprzednich rund zostają. Domyślnie dostępna jest jedna wymiana na rundę. Można też ustawić dowolne wymiany. Karta niewykonalna wypada bez zużycia wymiany. Po wykorzystaniu zgodnej puli losowanie wraca do najdawniej pokazanych kart.
-- **„Wygraj bez broni”** to osobna karta wybierana ręcznie. Każdy rywal może osobno zdobyć 25 pkt w pojedynku, a duet dostaje jednorazowe 25 pkt za wspólne zaliczenie. Kartę można wybrać jako samodzielną rozgrywkę albo raz w serii.
+- **„Wygraj bez broni”** jest dostępna w katalogu i pod linkiem **Wybierz konkretną misję**. Solo ma jeden wynik, rywale mogą osobno zdobyć po 25 pkt, a drużyna dostaje jeden wspólny wynik 25 pkt. Kartę można wybrać jako samodzielną rozgrywkę albo raz w serii.
 - Katalog zawiera **112 zwykłych kart i jedną legendarną**. Wyszukiwanie i filtry obejmują trudność, kategorię, Build/Zero Build i Solo/Duo. Oceny i notatki można zapisać lokalnie i skopiować z katalogu.
-- Ukończone rundy zachowują ID, wersję reguł, treść, trudność i wartość. Zapis v1/v2 jest odczytywany z dawnym przelicznikiem 1 pkt i oznaczeniem **legacy**. Po migracji następne przydzielone karty używają nowej skali.
+- Ukończone rundy zachowują ID, wersję reguł, treść, trudność i wartość. Zapis v1/v2 jest odczytywany z dawnym przelicznikiem 1 pkt i oznaczeniem **legacy**. Migracja v3 do v4 zachowuje treść karty, ustawienia aktywnej gry, punktację i historię.
 - Wyniki są wpisywane ręcznie. Aktywna gra, historia, rankingi, odznaki i opinie pozostają w tej przeglądarce. Reset w **Zasady i zapis → Zapis i prywatność** usuwa tylko dane KILEK CHALLENGE.
 
 ## Zawartość i oprawa
 
-Zbrojownia ma 12 kart, obracane schematy i porównanie dwóch pozycji na skali dydaktycznej. Akademia zawiera 10 lekcji, 4 demonstracje i quiz. Karta Wyścigówy Usoppa oraz notatki sezonowe podają osobne źródła i tryby. [Źródła](ZRODLA.md)
+Zbrojownia zawiera konkretne przedmioty i warianty. Można filtrować po okresie, rodzaju, playliście i rzadkości, porównywać parametry dwóch wariantów oraz powiększać dostępne rendery Epic. Osobny poradnik zachowuje 12 opisów rodzin sprzętu. Brakujące ujęcia ekwipunku, meczu i liczb pokazujemy jawnie. [Źródła i wykaz obrazów](ZRODLA.md)
 
-Start wykorzystuje autorską scenę Canvas z projekcją przestrzenną, obracanym kryształem i orbitalnymi warstwami. Tasowanie i odkrycie korzystają z CSS i WAAPI. Interfejs respektuje ustawienie ograniczonego ruchu. Arena zatrzymuje odświeżanie po opuszczeniu ekranu.
+**Aktualny sezon** opisuje Łowców Skarbów, Wyspę Kościotrupów, Dni Kapitanów, zmiany łupów i różnice playlist. Karty przedmiotów prowadzą do odpowiadających wpisów w Zbrojowni. Na stronie są daty ręcznej weryfikacji i odnośniki do materiałów Epic.
+
+Akademia zawiera 10 lekcji, 4 demonstracje i quiz. Start korzysta z autorskiej sceny Canvas. Animacje interfejsu uwzględniają ustawienie ograniczonego ruchu, a losowanie można pominąć. Arena zatrzymuje odświeżanie poza ekranem.
 
 ## Uruchomienie i testy
 

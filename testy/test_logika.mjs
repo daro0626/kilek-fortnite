@@ -26,7 +26,7 @@ S.ustawLosowanie(() => { ziarno = (ziarno * 16807) % 2147483647; return (ziarno 
 const start = (tryb = 'build', trud = 'latwy') => {
   let s = S.nowyStan();
   s = S.ustawTryb(s, tryb); s = S.ustawTrudnosc(s, trud);
-  return S.rozpocznij(s);
+  return S.rozpocznij(s, 'seria');
 };
 const rozegrajRunde = (s, a = 1, b = 0) => {
   s = S.odkryj(s); s = S.graj(s); s = S.doRozliczenia(s);
@@ -69,6 +69,33 @@ test('każda konfiguracja ma co najmniej 4 zgodne karty', () => {
     assert.ok(pula(t, d.id, sklad).every(m => m.tryby.includes(t) && m.trudnosc === d.id && m.sklady.includes(sklad)));
   }
   assert.ok(!pula('build', 'zero').length);
+});
+
+test('format rozgrywki ustala skład, a turniej solo ma jeden niezależny wynik', () => {
+  const s = S.nowyStan();
+  assert.equal(S.swobodny(s), true);
+  assert.equal(S.ustawFormat(s, 'swobodny', 'duo').sklad, 'duo');
+  assert.equal(S.ustawFormat(s, 'duet').sklad, 'duo');
+  assert.equal(S.ustawFormat(S.ustawFormat(s, 'duet'), 'seria').sklad, 'solo');
+  const turniej = S.rozpocznij(S.ustawFormat(s, 'solo'), 'solo', true);
+  const wynik = rozegrajRunde(turniej);
+  assert.deepEqual(S.punkty(wynik), [25]);
+  assert.equal(S.zwyciezca(wynik), null);
+  assert.equal(S.migruj(wynik).historia[0].sposob, 'solo');
+  assert.deepEqual(S.migruj(wynik).historia[0].punkty, [25]);
+});
+
+test('migracja v3 zachowuje aktywną kartę, treść, wynik duetu i historię pojedynku', () => {
+  const final = rozegrajRunde(S.rozpocznij(S.nowyStan(), 'seria', true), 1, 1);
+  let stary = S.rozpocznij(final, 'duet'); // rewanż w innym składzie, bez utraty archiwum
+  stary = S.odkryj(stary);
+  stary = {...stary, v: 3};
+  const wynik = S.migruj(stary);
+  assert.equal(wynik.v, S.WERSJA);
+  assert.deepEqual(wynik.seria, stary.seria);
+  assert.deepEqual(wynik.historia, stary.historia);
+  assert.deepEqual(wynik.historia[0].punkty, [25,25]);
+  assert.deepEqual(S.punkty(wynik), [0]);
 });
 
 test('pełna seria: 3 rundy, karty bez powtórek, wynik i zwycięzca', () => {
@@ -235,7 +262,7 @@ test('duet: wspólny wynik daje 25 raz, a drużynowa pula nie trafia do Solo', (
 
 test('limity 5, 10 i otwarta seria oraz dowolne wymiany', () => {
   for (const limit of [5, 10, 0]) {
-    let s = S.rozpocznij(S.ustawOpcje(S.ustawOpcje(S.nowyStan(), 'limit', limit), 'wymianyDowolne', true));
+    let s = S.rozpocznij(S.ustawOpcje(S.ustawOpcje(S.nowyStan(), 'limit', limit), 'wymianyDowolne', true), 'seria');
     for (let i = 0; i < 3; i++) {
       assert.ok(S.mozeWymienic(s));
       s = S.wymien(s);
@@ -287,7 +314,7 @@ test('rewanż: ci sami gracze, tryb, trudność; pierwsza karta inna niż ostatn
     let s = S.nowyStan();
     s = S.ustawGracza(s, 0, 'Gracz Alfa'); s = S.ustawGracza(s, 1, 'Gracz Beta');
     s = S.ustawTryb(s, 'zero'); s = S.ustawTrudnosc(s, 'normalny');
-    s = S.rozpocznij(s);
+    s = S.rozpocznij(s, 'seria');
     for (let i = 0; i < 3; i++) s = rozegrajRunde(s);
     const ostatnia = s.ostatnia;
     assert.equal(ostatnia, s.seria.rundy[2].karta);

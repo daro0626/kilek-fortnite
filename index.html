@@ -4,15 +4,33 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>KILEK CHALLENGE: nieoficjalne wyzwania do meczów w Fortnite</title>
-<meta name="description" content="Fanowski portal Fortnite. Misje, lokalne turnieje, Zbrojownia, ćwiczenia w Akademii i datowane aktualności.">
+<meta name="description" content="Fanowski portal Fortnite. Szybkie wyzwania, turnieje, Zbrojownia i przewodnik po sezonie Łowcy Skarbów.">
 <link rel="icon" href="data:,">
 <meta name="theme-color" content="#090b1d">
 <meta name="color-scheme" content="dark">
+<script>
+  (() => {
+    const [dzial, przedmiot = 'flint'] = location.hash.slice(1).split('/');
+    const renders = { flint: 'flint-render.webp', hammer: 'hammer-render.webp', flapjack: 'flapjack-render.webp' };
+    const file = dzial === 'aktualnie'
+      ? (matchMedia('(max-width: 640px)').matches ? 'wyspa-port-mobile.webp' : 'wyspa-port.webp')
+      : dzial === 'zbrojownia' && Object.hasOwn(renders, przedmiot) ? renders[przedmiot] : '';
+    if (!file) return;
+    const preload = document.createElement('link');
+    preload.rel = 'preload';
+    preload.as = 'image';
+    preload.href = 'assets/fortnite/' + file;
+    preload.setAttribute('fetchpriority', 'high');
+    document.head.append(preload);
+  })();
+</script>
+<link rel="modulepreload" href="js/app.js">
 <link rel="preload" href="fonts/barlow-condensed-latin-800-italic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/atkinson-hyperlegible-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/fortnite.css">
 <link rel="stylesheet" href="css/portal.css">
 <link rel="stylesheet" href="css/arena.css">
+<link rel="stylesheet" href="css/odkrywca.css">
 </head>
 <body data-etap="start" data-trud="latwy">
 <a class="skip" href="#tresc">Przejdź do treści</a>
@@ -42,7 +60,7 @@
         <a href="#zbrojownia" data-nav="zbrojownia">Zbrojownia</a>
         <a href="#akademia" data-nav="akademia">Akademia</a>
         <a href="#turnieje" data-nav="turnieje">Turnieje</a>
-        <a href="#aktualnie" data-nav="aktualnie">Aktualnie</a>
+        <a href="#aktualnie" data-nav="aktualnie">Sezon</a>
       </div>
     </nav>
     <button class="btn-ikona" type="button" data-akcja="info" aria-label="Zasady i zapis">i</button>
@@ -92,7 +110,7 @@
         <div><strong>Turnieje i wyniki</strong><p>Rozegraj pojedynek, wróć do historii i sprawdź odznaki.</p></div></a>
       <a href="#aktualnie" class="portal-kafel"><span class="portal-kafel-ikona portal-ikona-svg" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M3 5h18v14H3zM3 9h18M6 13h4v3H6zm7 0h5m-5 3h5"/></svg></span>
-        <div><strong>Aktualnie w Fortnite</strong><p>Datowane informacje z oficjalnych materiałów Epic.</p></div></a>
+        <div><strong>Aktualny sezon</strong><p>Odkryj Wyspę Kościotrupów, nowe przedmioty i wydarzenia.</p></div></a>
     </div>
   </section>
   <section data-dzial="wyzwania" aria-label="Wyzwania" hidden>
@@ -118,9 +136,34 @@
     <div class="katalog-lista" id="katalog-lista"></div>
   </section>
   <section class="portal-wrap dzial-portal" data-dzial="zbrojownia" aria-labelledby="zbrojownia-tytul" hidden>
-    <header class="dzial-naglowek"><p>SPRZĘT I DYSTANS</p><h1 id="zbrojownia-tytul" data-portal-fokus tabindex="-1">Zbrojownia</h1>
-      <div>Sprawdź, do czego służy sprzęt, i porównaj dwa typy przed następnym meczem.</div></header>
-    <div id="zbrojownia"></div>
+    <header class="dzial-naglowek arsenal-naglowek"><p>PRZEDMIOTY Z FORTNITE</p><h1 id="zbrojownia-tytul" data-portal-fokus tabindex="-1">Zbrojownia</h1>
+      <div>Rozpoznaj przedmioty z Łowców Skarbów i porównaj konkretne warianty.</div></header>
+    <div id="arsenal-root">
+      <form class="arsenal-filtry" aria-label="Filtry Zbrojowni">
+        <label>Okres<select name="okres"><option value="sezon">Aktualny sezon</option><option value="archiwum">Archiwum</option></select></label>
+        <label>Rodzaj sprzętu<select name="typ"><option value="">Wszystkie rodzaje</option></select></label>
+        <label>Tryb gry<select name="playlista"><option value="">Wszystkie tryby</option></select></label>
+        <label>Rzadkość<select name="rzadkosc"><option value="">Wszystkie rzadkości</option></select></label>
+      </form>
+      <div class="arsenal-uklad">
+        <article id="arsenal-widok" class="arsenal-widok rzad-rzadka">
+          <header class="arsenal-gora">
+            <div><p class="znacznik">Pistolet · Łowcy Skarbów · odczyt puli 23.11</p>
+              <h2>Pistolet krzemieniowy</h2><p class="arsenal-oryginal">Flint-Knock Pistol</p></div>
+            <div><p class="arsenal-rzadkosc">Rzadka</p><p class="arsenal-status">Potwierdzone</p></div>
+          </header>
+          <figure class="arsenal-galeria">
+            <div id="arsenal-foto"><img data-startowy width="1000" height="640" loading="lazy" fetchpriority="high" decoding="async" src="assets/fortnite/flint-render.webp" alt="Pistolet krzemieniowy, Render Epic"></div>
+            <figcaption id="arsenal-fotopis">Oficjalny render promocyjny z premiery v8.11. <a href="https://www.fortnite.com/news/patch-notes-v8-11">Epic · render v8.11</a></figcaption>
+          </figure>
+        </article>
+        <nav class="arsenal-lista" aria-label="Przedmioty">
+          <h2>Wybierz przedmiot</h2><p class="nota" id="arsenal-licznik" role="status"></p>
+          <div id="arsenal-karty"></div>
+        </nav>
+      </div>
+      <div id="arsenal-dodatki"></div>
+    </div>
   </section>
   <section class="portal-wrap dzial-portal" data-dzial="akademia" aria-labelledby="akademia-tytul" hidden>
     <header class="dzial-naglowek"><p>PLAN TRENINGOWY</p><h1 id="akademia-tytul" data-portal-fokus tabindex="-1">Akademia</h1>
@@ -134,11 +177,44 @@
     <div id="turnieje"></div>
   </section>
   <section class="portal-wrap dzial-portal" data-dzial="aktualnie" aria-labelledby="aktualnie-tytul" hidden>
-    <header class="dzial-naglowek"><p>NOTATKI Z AKTUALIZACJI</p><h1 id="aktualnie-tytul" data-portal-fokus tabindex="-1">Aktualnie w Fortnite</h1>
-      <div>Sprawdzenie źródeł: 23 listopada 2026. Każda notatka dotyczy wskazanej wersji i trybu.</div></header>
-    <div id="aktualnie"></div>
+    <div id="sezon-widok">
+      <header class="sezon-hero">
+        <picture><source media="(max-width: 640px)" srcset="assets/fortnite/wyspa-port-mobile.webp">
+          <img width="1240" height="698" src="assets/fortnite/wyspa-port.webp" loading="lazy" fetchpriority="high" decoding="async" alt="">
+        </picture>
+        <div class="sezon-hero-copy">
+          <p class="znacznik">AKTUALNY SEZON · ROZDZIAŁ 7</p>
+          <h1 id="aktualnie-tytul" data-portal-fokus tabindex="-1">Łowcy <span>Skarbów</span></h1>
+          <p>Wejdź na Wyspę Kościotrupów. Znajdź mapę skarbu, odwiedź okręty kapitanów i zobacz ich wyposażenie.</p>
+          <div class="sezon-hero-info"><span>Start <time datetime="2026-11-01">1.11.2026</time></span><span>Aktualizacja 43.10</span></div>
+          <p class="sezon-data">Ostatnia weryfikacja 23.11.2026</p>
+          <a href="https://www.fortnite.com/news/fortnite-treasure-hunters-the-greatest-adventure-of-all-time">Oficjalny opis sezonu</a>
+        </div>
+      </header>
+      <div id="sezon-tresc"></div>
+    </div>
   </section>
 </main>
+<script>
+  const landing = location.hash.slice(1);
+  const obraz = landing === 'aktualnie' ? '#sezon-widok picture img' : landing === 'zbrojownia' ? '#arsenal-foto img' : '';
+  if (obraz) {
+    document.querySelector(obraz).loading = 'eager';
+    document.querySelector('main [data-dzial=start]').hidden = true;
+    document.querySelector('main [data-dzial=' + landing + ']').hidden = false;
+  }
+</script>
+<script type="module">
+  if (location.hash.slice(1).split('/')[0] === 'zbrojownia') {
+    import('./js/zbrojownia.js').then(({zbrojownia}) => {
+      const [landing, ...item] = location.hash.slice(1).split('/');
+      if (landing !== 'zbrojownia' || document.body.dataset.dzial) return;
+      zbrojownia(document.getElementById('arsenal-root'), item);
+      document.querySelector('main [data-dzial=start]').hidden = true;
+      document.querySelector('main [data-dzial=zbrojownia]').hidden = false;
+    });
+  }
+</script>
 
 <div class="komunikat" id="komunikat" role="status" aria-live="polite"></div>
 <div class="sr" id="ogloszenie" aria-live="assertive"></div>
